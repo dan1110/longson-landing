@@ -3,6 +3,7 @@
 // Một dòng sale: copy link + đổi token (thu hồi) (mục 9).
 import { useState, useTransition } from 'react';
 import { rotateSaleToken } from '../actions';
+import { confirmDialog } from '@/components/Toast';
 
 export function SaleLinkRow({
   saleId,
@@ -26,8 +27,8 @@ export function SaleLinkRow({
     setTimeout(() => setCopied(false), 1600);
   }
 
-  function rotate() {
-    if (!confirm(`Đổi link của ${name}? Link CŨ sẽ ngừng hoạt động ngay.`)) return;
+  async function rotate() {
+    if (!(await confirmDialog({ title: `Đổi link của ${name}?`, message: 'Link CŨ sẽ ngừng hoạt động ngay.', confirmText: 'Đổi link', danger: true }))) return;
     start(() => rotateSaleToken(saleId).then(() => {}));
   }
 

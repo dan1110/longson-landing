@@ -6,6 +6,7 @@ import { Sheet } from '@/components/Sheet';
 import { Icon } from '@/components/Icon';
 import { RowMenu } from '@/components/RowMenu';
 import { createSale, updateSale, deleteSale } from '../actions';
+import { confirmDialog } from '@/components/Toast';
 import type { Profile } from '@/lib/database.types';
 
 const inputCls =
@@ -35,7 +36,15 @@ export function SaleCardActions({ sale }: { sale: Profile }) {
   const [busy, setBusy] = useState(false);
 
   async function remove() {
-    if (!confirm(`Xóa/khóa nhân viên ${sale.name}? Nếu đã có đơn, tài khoản sẽ bị khóa để giữ lịch sử.`)) return;
+    if (
+      !(await confirmDialog({
+        title: `Xóa/khóa nhân viên ${sale.name}?`,
+        message: 'Nếu đã có đơn, tài khoản sẽ bị khóa để giữ lịch sử.',
+        confirmText: 'Xóa/khóa',
+        danger: true,
+      }))
+    )
+      return;
     setBusy(true);
     await deleteSale(sale.id);
     setBusy(false);

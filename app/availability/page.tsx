@@ -9,6 +9,7 @@ import { MonthCalendar } from '@/components/MonthCalendar';
 import { Sheet } from '@/components/Sheet';
 import { Icon } from '@/components/Icon';
 import { MoneyInput } from '@/components/MoneyInput';
+import { toast } from '@/components/Toast';
 import { buildConfirmMessage } from '@/lib/message';
 import { bankConfigured } from '@/lib/vietqr';
 import { downloadConfirmCard } from '@/lib/confirmCard';
@@ -68,7 +69,7 @@ export default function AvailabilityPage() {
 
   async function onCreateRange(unitId: string, checkin: string, checkout: string) {
     if (!unitId) {
-      alert('Hãy chọn 1 phòng cụ thể (ở ô "Tất cả phòng" phía trên) rồi mới đặt nhé.');
+      toast.info('Hãy chọn 1 phòng cụ thể (ở ô "Tất cả phòng" phía trên) rồi mới đặt nhé.');
       return;
     }
     const supabase = createClient();
@@ -78,7 +79,7 @@ export default function AvailabilityPage() {
       p_checkout: checkout,
     });
     if (error) {
-      alert(error.message.includes('TRUNG_LICH') ? 'Ngày này vừa có người đặt. Chọn ngày khác nhé.' : 'Có lỗi, thử lại.');
+      toast.error(error.message.includes('TRUNG_LICH') ? 'Ngày này vừa có người đặt. Chọn ngày khác nhé.' : 'Có lỗi, thử lại.');
       return;
     }
     setHoldId(data as string);

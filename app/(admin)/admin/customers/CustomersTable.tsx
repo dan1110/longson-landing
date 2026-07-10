@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { Sheet } from '@/components/Sheet';
 import { Icon } from '@/components/Icon';
 import { RowMenu } from '@/components/RowMenu';
+import { toast, confirmDialog } from '@/components/Toast';
 import { money } from '@/lib/format';
 import { createCustomer, updateCustomer, deleteCustomer } from '../actions';
 
@@ -178,9 +179,10 @@ export function CustomersTable({ rows }: { rows: CustomerRow[] }) {
 
 function RowActions({ row, onEdit }: { row: CustomerRow; onEdit: () => void }) {
   async function remove() {
-    if (!confirm(`Xóa khách ${row.name}?`)) return;
+    if (!(await confirmDialog({ title: `Xóa khách ${row.name}?`, confirmText: 'Xóa', danger: true }))) return;
     const res = await deleteCustomer(row.id);
-    if (!res.ok) alert(res.error);
+    if (res.ok) toast.success('Đã xóa khách.');
+    else toast.error(res.error);
   }
   return (
     <RowMenu

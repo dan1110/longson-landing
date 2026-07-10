@@ -11,6 +11,7 @@ import { paid, remaining, STATUS_LABEL, CATEGORY_LABEL } from '@/lib/booking';
 import { money, dmy, dm } from '@/lib/format';
 import { Pill } from './ui';
 import { Icon } from './Icon';
+import { confirmDialog } from './Toast';
 import { QrBox } from './QrBox';
 
 export function BookingDetail({
@@ -297,8 +298,8 @@ export function BookingDetail({
           )}
           {onDelete && (
             <button
-              onClick={() => {
-                if (confirm('Xóa đơn này? Ngày sẽ được nhả ra.')) onDelete();
+              onClick={async () => {
+                if (await confirmDialog({ title: 'Xóa đơn này?', message: 'Ngày sẽ được nhả ra.', confirmText: 'Xóa', danger: true })) onDelete();
               }}
               className="rounded-xl py-3 text-sm font-semibold bg-white border-[1.5px] border-[var(--tape-line)] text-[var(--tape-ink)] hover:bg-[#fdf3f1] transition-colors flex items-center justify-center gap-2"
             >

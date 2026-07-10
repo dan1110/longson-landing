@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import type { BookingFull, Unit } from '@/lib/database.types';
 import { parseDate, toISODate, dm } from '@/lib/format';
 import { Icon } from './Icon';
+import { toast } from './Toast';
 
 const DOW = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const MONTHS = [
@@ -122,7 +123,7 @@ export function MonthCalendar({
       checkout = toISODate(new Date(c.getFullYear(), c.getMonth(), c.getDate() + 1));
     }
     if (anyBusyInRange(checkin, checkout)) {
-      alert('Khoảng ngày này có ngày đã được đặt. Chọn khoảng khác nhé.');
+      toast.error('Khoảng ngày này có ngày đã được đặt. Chọn khoảng khác nhé.');
       setRangeStart(null);
       setHover(null);
       return;

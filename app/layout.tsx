@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
+import { Toaster } from '@/components/Toast';
 import './globals.css';
 
 const beVietnam = Be_Vietnam_Pro({
@@ -35,7 +36,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi" className={`${beVietnam.variable} ${jetbrains.variable}`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

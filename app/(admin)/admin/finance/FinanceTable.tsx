@@ -6,6 +6,7 @@ import { Sheet } from '@/components/Sheet';
 import { Icon } from '@/components/Icon';
 import { RowMenu } from '@/components/RowMenu';
 import { MoneyInput } from '@/components/MoneyInput';
+import { toast, confirmDialog } from '@/components/Toast';
 import { money, dmy, toISODate } from '@/lib/format';
 import { CATEGORY_LABEL } from '@/lib/booking';
 import { addTransaction, updateTransaction, deleteTransaction } from '../actions';
@@ -139,9 +140,10 @@ export function FinanceTable({ rows }: { rows: TxnRow[] }) {
 
 function TxnMenu({ row, onEdit }: { row: TxnRow; onEdit: () => void }) {
   async function remove() {
-    if (!confirm('Xóa giao dịch này?')) return;
+    if (!(await confirmDialog({ title: 'Xóa giao dịch này?', confirmText: 'Xóa', danger: true }))) return;
     const res = await deleteTransaction(row.id);
-    if (!res.ok) alert(res.error);
+    if (res.ok) toast.success('Đã xóa giao dịch.');
+    else toast.error(res.error);
   }
   return <RowMenu items={[{ label: 'Sửa', icon: 'edit', onClick: onEdit }, { label: 'Xóa', icon: 'trash', danger: true, onClick: remove }]} />;
 }

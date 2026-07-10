@@ -9,6 +9,7 @@ import { Sheet } from '@/components/Sheet';
 import { Icon } from '@/components/Icon';
 import { BookingForm } from '@/components/BookingForm';
 import { BookingDetail } from '@/components/BookingDetail';
+import { toast } from '@/components/Toast';
 import { deleteBooking, updateBookingNote, createHold, releaseHold } from '../actions';
 
 export function CalendarClient({
@@ -63,7 +64,7 @@ export function CalendarClient({
       const res = await createHold(unitId, checkin, checkout);
       setCreatingHold(false);
       if (!res.ok) {
-        alert(res.error); // ngày vừa có người đặt
+        toast.error(res.error); // ngày vừa có người đặt
         return;
       }
       setHoldId(res.id);

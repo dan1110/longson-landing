@@ -42,9 +42,11 @@ export default async function OverviewPage({
     0,
   );
 
-  // Công nợ: booking doanh thu còn thiếu tiền, xếp theo ngày trả gần nhất.
+  // Công nợ: booking doanh thu còn thiếu tiền TRONG KỲ ĐANG XEM (trả phòng
+  // trong kỳ), xếp theo ngày trả gần nhất. Danh sách cuộn được, không tràn.
   const debts = bookings
     .filter((b) => ['confirmed', 'staying', 'completed'].includes(b.status))
+    .filter((b) => b.checkout_date >= period.from && b.checkout_date <= period.to)
     .map((b) => ({ b, owe: remaining(b, b.transactions) }))
     .filter((x) => x.owe > 0)
     .sort((a, z) => a.b.checkout_date.localeCompare(z.b.checkout_date));
@@ -125,13 +127,18 @@ export default async function OverviewPage({
 
       <Card>
         <div className="flex items-center justify-between mb-2">
-          <Eyebrow>Công nợ cần thu</Eyebrow>
+          <div>
+            <Eyebrow>Công nợ cần thu</Eyebrow>
+            <div className="text-[11px] text-[var(--ink-3)] mt-0.5">
+              {periodLabel} · {debts.length} khách
+            </div>
+          </div>
           <span className="mono text-xs font-bold text-[var(--tape-ink)]">{money(oweTotal)} ₫</span>
         </div>
         {debts.length === 0 ? (
-          <p className="text-xs text-[var(--ink-3)] py-1">Không còn công nợ. 🎉</p>
+          <p className="text-xs text-[var(--ink-3)] py-1">Không có công nợ trong kỳ này. 🎉</p>
         ) : (
-          <div className="divide-y divide-[var(--line)]">
+          <div className="max-h-[280px] overflow-y-auto -mr-1 pr-1 divide-y divide-[var(--line)]">
             {debts.map(({ b, owe }) => (
               <div key={b.id} className="flex items-center justify-between py-2">
                 <div className="text-[13px]">

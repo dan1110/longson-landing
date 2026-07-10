@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens lấy từ bản mockup long-son-mobile.html ─────────── */
+:root {
+  --ink: #16202e;
+  --ink-2: #24344a;
+  --ink-3: #64748b;
+  /* Màu chủ đạo lấy theo logo (sóng xanh cyan-blue) */
+  --teal: #0e8cae;
+  --teal-d: #0a6c88;
+  --brick: #b8402f;
+  --free: #dfefe2;
+  --free-line: #a9d4b1;
+  --tape: #f7cfcb;
+  --tape-line: #de9a93;
+  --tape-ink: #8e2e20;
+  --lock: #e1e7ec;
+  --lock-line: #c2ccd5;
+  --lock-ink: #5a6b7e;
+  --pend: #fbe3b8;
+  --pend-line: #d9962a;
+  --pend-ink: #8a5806;
+  --paper: #edf0f3;
+  --card: #ffffff;
+  --line: #e1e6ea;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Vùng cuộn chừa chỗ cho bottom nav */
+.app-scroll {
+  padding-bottom: 84px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ẩn scrollbar cho dải cuộn ngang */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rt-dot {
+    animation: none !important;
+  }
+  .fade-in {
+    animation: none !important;
+  }
+}
+
+.rt-dot {
+  animation: pulse 2.4s infinite;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(72, 199, 142, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(72, 199, 142, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(72, 199, 142, 0);
+  }
+}
+
+.fade-in {
+  animation: fade 0.2s;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Sọc vàng cho booking chờ duyệt (timeline) */
+.stripe-pend {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--pend) 0 4px,
+    #f3d488 4px 8px
+  );
+}

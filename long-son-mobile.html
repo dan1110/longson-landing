@@ -1,0 +1,700 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Long Sơn Homestay — bản điện thoại</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root{
+  --ink:#16202E; --ink-2:#24344A; --ink-3:#64748B;
+  --teal:#2D7A6A; --teal-d:#215C50; --brick:#B8402F;
+  --free:#DFEFE2; --free-line:#A9D4B1;
+  --tape:#F7CFCB; --tape-line:#DE9A93; --tape-ink:#8E2E20;
+  --lock:#E1E7EC; --lock-line:#C2CCD5; --lock-ink:#5A6B7E;
+  --pend:#FBE3B8; --pend-line:#D9962A; --pend-ink:#8A5806;
+  --paper:#EDF0F3; --card:#FFFFFF; --line:#E1E6EA;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Be Vietnam Pro',system-ui,sans-serif;background:#20262E;color:var(--ink);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+/* ── công tắc demo (ngoài điện thoại) ─────── */
+.demo-bar{width:100%;max-width:430px;padding:16px 16px 10px;color:#fff;text-align:center}
+.demo-bar h1{font-size:14px;font-weight:700;letter-spacing:.02em}
+.demo-bar p{font-size:11.5px;color:#9DB0C4;margin:4px 0 12px;line-height:1.5}
+.switch{display:flex;gap:6px;background:#161B22;border:1px solid #2C3743;border-radius:12px;padding:5px}
+.switch button{flex:1;background:0;border:0;color:#8496A8;padding:10px;border-radius:8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:center}
+.switch button small{font-weight:500;font-size:10px;opacity:.75}
+.switch button[aria-pressed=true]{background:var(--teal);color:#fff}
+.switch button[aria-pressed=true][data-s=admin]{background:var(--ink);border:1px solid #3A4A5C}
+
+/* ── khung điện thoại ─────── */
+.phone{width:100%;max-width:390px;height:min(780px,92vh);background:var(--paper);border-radius:34px;border:9px solid #0C0F13;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+@media(max-width:430px){
+  body{background:var(--paper)}
+  .demo-bar{max-width:100%}
+  .phone{max-width:100%;height:auto;min-height:calc(100vh - 150px);border-radius:0;border:0;box-shadow:none;flex:1}
+}
+.statusbar{height:30px;flex:0 0 30px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:12px;font-weight:600;color:#fff;background:var(--ink)}
+.statusbar .r{display:flex;gap:5px;align-items:center;font-size:11px}
+
+/* ── app bar ─────── */
+.appbar{background:var(--ink);color:#fff;padding:8px 16px 12px;flex:0 0 auto}
+.appbar .row1{display:flex;align-items:center;gap:9px}
+.logo{width:30px;height:30px;border-radius:8px;background:var(--teal);display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 30px}
+.appbar .who{flex:1;line-height:1.2}
+.appbar .who b{font-size:14px;font-weight:700;display:block}
+.appbar .who small{font-size:10.5px;color:#8FA1B4}
+.appbar .live{display:flex;align-items:center;gap:5px;font-size:10px;color:#9DB0C4}
+.rt-dot{width:6px;height:6px;border-radius:50%;background:#48C78E;animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(72,199,142,.5)}70%{box-shadow:0 0 0 6px rgba(72,199,142,0)}100%{box-shadow:0 0 0 0 rgba(72,199,142,0)}}
+@media(prefers-reduced-motion:reduce){.rt-dot{animation:none}}
+
+/* ── vùng cuộn ─────── */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:76px}
+.pg{display:none;padding:14px}
+.pg.on{display:block;animation:fade .2s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.pg.on{animation:none}}
+
+h2{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.sub{font-size:12px;color:var(--ink-3);line-height:1.55;margin-top:3px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card+.card{margin-top:12px}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+
+/* ── trạng thái phòng hôm nay (chữ ký) ─────── */
+.today-strip{margin-top:12px;display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.today-strip::-webkit-scrollbar{display:none}
+.rm{flex:0 0 auto;min-width:96px;border-radius:12px;padding:11px 12px;border:1px solid;position:relative}
+.rm.free{background:var(--free);border-color:var(--free-line)}
+.rm.busy{background:var(--tape);border-color:var(--tape-line)}
+.rm .rn{font-size:12px;font-weight:700;line-height:1.2}
+.rm .rn small{display:block;font-weight:500;font-size:9.5px;color:var(--ink-3);margin-top:1px}
+.rm .rs{font-size:10.5px;font-weight:700;margin-top:8px;display:flex;align-items:center;gap:4px}
+.rm.free .rs{color:var(--teal-d)}
+.rm.busy .rs{color:var(--tape-ink)}
+
+/* ── form ─────── */
+label{display:block;font-size:11px;font-weight:700;color:var(--ink-3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+input,select{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:11px;font:inherit;font-size:15px;background:#fff;color:var(--ink)}
+input:focus,select:focus{outline:0;border-color:var(--teal)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr .8fr;gap:8px}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation}
+.btn:active{transform:scale(.98)}
+.btn-p{background:var(--teal);color:#fff}
+.btn-o{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+.btn-d{background:var(--pend);color:var(--pend-ink);border:1.5px solid var(--pend-line)}
+.btn-brick{background:var(--brick);color:#fff}
+.btn-sm{padding:10px;font-size:13px;border-radius:10px}
+.mt{margin-top:12px}
+
+/* ── kết quả trống ─────── */
+.res{margin-top:14px;display:flex;flex-direction:column;gap:9px}
+.rc{border:1.5px solid var(--line);border-radius:12px;padding:12px 13px}
+.rc.ok{background:var(--free);border-color:var(--free-line)}
+.rc.no{background:#FBF1F0;border-color:var(--tape-line);opacity:.85}
+.rc .h{display:flex;align-items:center;gap:9px}
+.rc .h b{flex:1;font-size:14px}
+.rc .h .price{font-size:13px;font-weight:700}
+.rc .why{font-size:11px;color:var(--ink-3);margin:5px 0 0 27px}
+.rc .act{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* ── timeline ─────── */
+.tlbar{display:flex;align-items:center;gap:8px;margin:10px 0 8px}
+.leg{display:flex;gap:9px;font-size:10px;color:var(--ink-3);flex-wrap:wrap}
+.leg i{width:11px;height:11px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:3px;border:1px solid}
+.i-free{background:var(--free);border-color:var(--free-line)}
+.i-tape{background:var(--tape);border-color:var(--tape-line)}
+.i-lock{background:var(--lock);border-color:var(--lock-line)}
+.i-pend{background:repeating-linear-gradient(135deg,var(--pend) 0 4px,#F3D488 4px 8px);border-color:var(--pend-line)}
+.tl{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.tl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.grid{width:max-content;min-width:100%}
+.hdr{display:flex;position:sticky;top:0;background:var(--ink);color:#fff;z-index:3}
+.corner{width:74px;flex:0 0 74px;position:sticky;left:0;z-index:4;background:var(--ink);font-size:9px;display:flex;align-items:center;padding-left:9px;letter-spacing:.05em;text-transform:uppercase;color:#8496A8}
+.hc{width:32px;flex:0 0 32px;text-align:center;padding:4px 0;font-size:9px;line-height:1.3;border-left:1px solid rgba(255,255,255,.08)}
+.hc b{display:block;font-size:11px}
+.hc.we{background:var(--brick)}
+.hc.td{background:var(--teal)}
+.trow{display:flex;position:relative;height:44px;border-top:1px solid var(--line)}
+.unit{width:74px;flex:0 0 74px;position:sticky;left:0;z-index:2;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;padding:0 7px;font-size:11px;font-weight:700;line-height:1.15}
+.unit small{font-weight:500;color:var(--ink-3);font-size:9px}
+.unit.kid{padding-left:15px}
+.cells{display:flex;position:relative;flex:1}
+.cel{width:32px;flex:0 0 32px;border-left:1px solid var(--line);background:var(--free)}
+.cel.we{background:#D5E9D9}
+.cel.past{background:#F4F6F7}
+.cel.blk{background:repeating-linear-gradient(135deg,#EEF1F3 0 5px,#E1E6EA 5px 10px)}
+.cel.sel{background:#FFF1A8!important;box-shadow:inset 0 0 0 1px #D9A400}
+.tape{position:absolute;top:5px;height:34px;border-radius:6px;display:flex;align-items:center;padding:0 7px;font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;border:1px solid;z-index:1;cursor:pointer}
+.tape:active{filter:brightness(.95)}
+.t-mine{background:var(--tape);border-color:var(--tape-line);color:var(--tape-ink)}
+.t-other{background:var(--lock);border-color:var(--lock-line);color:var(--lock-ink)}
+.t-pend{background:repeating-linear-gradient(135deg,var(--pend) 0 6px,#F1D289 6px 12px);border-color:var(--pend-line);color:var(--pend-ink);border-style:dashed}
+.tape .tg{font-size:8.5px;opacity:.7;margin-left:4px;font-weight:600}
+
+/* ── list khách ─────── */
+.bcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 13px;cursor:pointer}
+.bcard+.bcard{margin-top:9px}
+.bcard:active{background:var(--paper)}
+.bcard .t{display:flex;align-items:center;gap:8px}
+.bcard .t b{flex:1;font-size:14.5px}
+.pill{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.p-ok{background:var(--free);color:var(--teal-d)}
+.p-owe{background:var(--tape);color:var(--tape-ink)}
+.p-pend{background:var(--pend);color:var(--pend-ink)}
+.bcard .m{font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+.bcard .amt{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:12px}
+.bcard .amt .owe{color:var(--brick);font-weight:700}
+
+/* ── KPI (admin) ─────── */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px}
+.kpi .l{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:700}
+.kpi .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:19px;letter-spacing:-.02em;margin-top:6px}
+.kpi .s{font-size:10px;color:var(--ink-3);margin-top:3px}
+.kpi.hero{background:var(--ink)}
+.kpi.hero .l{color:#8FA3B6}.kpi.hero .v{color:#79D6AC}.kpi.hero .s{color:#8FA3B6}
+.kpi.warn .v{color:var(--brick)}
+.chart{width:100%;height:auto;display:block;overflow:visible;margin-top:6px}
+.axis{font-size:8px;fill:var(--ink-3);font-family:'JetBrains Mono',monospace}
+.bar2{height:5px;background:var(--paper);border-radius:3px;overflow:hidden;margin-top:6px}
+.bar2 i{display:block;height:100%;background:var(--teal);border-radius:3px}
+.bar2.red i{background:var(--brick)}
+.trow2{display:flex;justify-content:space-between;font-size:12.5px;padding:9px 0;border-top:1px solid var(--line)}
+.trow2:first-child{border-top:0}
+.trow2 .muted{font-size:10.5px;color:var(--ink-3)}
+.callout{display:flex;align-items:center;gap:11px;background:#FFFBF2;border:1px solid var(--pend-line);border-radius:12px;padding:12px 13px;margin-top:12px;cursor:pointer}
+.callout .n{width:34px;height:34px;border-radius:9px;background:var(--pend);color:var(--pend-ink);display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 34px}
+.callout .tx{flex:1;font-size:12.5px;font-weight:600;line-height:1.35}
+.callout .go{color:var(--pend-ink);font-size:18px}
+
+/* thẻ duyệt */
+.appr{border:1px solid var(--pend-line);background:#FFFBF2;border-radius:13px;padding:13px}
+.appr+.appr{margin-top:11px}
+.appr .who b{font-size:15px}
+.appr .who small{display:block;color:var(--ink-3);font-size:11px;margin-top:3px;line-height:1.5}
+.appr .row{display:flex;align-items:flex-start;gap:10px;margin-bottom:11px}
+.appr .amt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;white-space:nowrap}
+.appr .acts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.by{font-size:9.5px;color:var(--pend-ink);background:var(--pend);padding:2px 7px;border-radius:20px;font-weight:700}
+
+/* ── bottom nav ─────── */
+.botnav{position:absolute;left:0;right:0;bottom:0;height:64px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+.botnav button{flex:1;background:0;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-3);font:inherit;font-size:10px;font-weight:600;cursor:pointer;position:relative}
+.botnav button svg{width:22px;height:22px}
+.botnav button[aria-selected=true]{color:var(--teal)}
+.botnav .nbadge{position:absolute;top:8px;left:50%;margin-left:4px;background:var(--brick);color:#fff;font-size:8.5px;font-weight:700;min-width:15px;height:15px;line-height:15px;border-radius:8px;padding:0 3px;display:none}
+.botnav .nbadge.on{display:block}
+
+/* ── sheet ─────── */
+.scrim{position:absolute;inset:0;background:rgba(20,28,40,.5);display:none;z-index:30}
+.scrim.on{display:block}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;overflow-y:auto;background:#fff;border-radius:20px 20px 0 0;z-index:31;transform:translateY(100%);transition:transform .25s cubic-bezier(.32,.72,0,1)}
+.sheet.on{transform:none}
+@media(prefers-reduced-motion:reduce){.sheet{transition:none}}
+.sh-h{position:sticky;top:0;background:var(--ink);color:#fff;padding:15px 16px;display:flex;align-items:center;gap:10px}
+.sh-h .grab{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.3)}
+.sh-h .code{font-size:10px;color:#94A5B7;letter-spacing:.06em}
+.sh-h h3{font-size:16px;font-weight:800;margin-top:2px}
+.x{background:rgba(255,255,255,.12);border:0;color:#fff;width:30px;height:30px;border-radius:8px;font-size:15px;cursor:pointer}
+.sh-b{padding:15px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.kv:last-child{border:0}
+.kv span{color:var(--ink-3)}
+.kv b{text-align:right}
+.tot{background:var(--paper);border-radius:11px;padding:12px;margin:12px 0}
+.tot .kv{padding:6px 0;border-color:#E0E5E9}
+.owe{color:var(--brick);font-weight:700}.paid{color:var(--teal)}
+.mask{background:repeating-linear-gradient(135deg,#DDE3E8 0 4px,#CFD7DE 4px 8px);color:transparent;border-radius:4px;padding:0 22px}
+.note{background:#FBF6E6;border:1px solid #EBD9A4;border-radius:11px;padding:11px 12px;font-size:11.5px;color:#6B5410;line-height:1.6;margin-top:12px}
+.note b{color:#4A3907}
+.qr{text-align:center;padding:14px;border:1px solid var(--line);border-radius:12px;margin-top:12px;display:none}
+.qr.on{display:block}
+.qr img{width:170px;height:170px;border-radius:8px;background:var(--paper)}
+.qr .cap{font-size:11px;color:var(--ink-3);margin-top:9px;line-height:1.5}
+.msg{width:100%;height:230px;font:inherit;font-size:11.5px;line-height:1.6;padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--paper);white-space:pre;resize:none;margin-top:6px}
+
+.toast{position:absolute;left:50%;bottom:78px;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#fff;padding:11px 15px;border-radius:11px;font-size:12.5px;z-index:50;opacity:0;pointer-events:none;transition:.25s;max-width:88%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty{text-align:center;padding:34px 16px;color:var(--ink-3);font-size:13px;line-height:1.6}
+.empty .big{font-size:30px;margin-bottom:8px}
+</style>
+
+<div class="demo-bar">
+  <h1>Long Sơn Homestay · bản điện thoại</h1>
+  <p>Đây là <b>hai trang khác nhau</b> trên cùng một hệ thống. Bấm để xem từng trang.</p>
+  <div class="switch" role="group" aria-label="Chọn trang">
+    <button data-s="sale" aria-pressed="true">Trang Sale<small>vào bằng link, không mật khẩu</small></button>
+    <button data-s="admin" aria-pressed="false">Trang Admin<small>chủ / quản lý, có đăng nhập</small></button>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="statusbar">
+    <span class="mono">14:32</span>
+    <span class="r"><span>▪▪▪</span><span>Wifi</span><span>82%</span></span>
+  </div>
+
+  <div class="appbar">
+    <div class="row1">
+      <div class="logo" id="logo">LS</div>
+      <div class="who"><b id="ab-name">Long Sơn</b><small id="ab-role">—</small></div>
+      <div class="live"><span class="rt-dot"></span><span id="ab-stamp">14:32</span></div>
+    </div>
+  </div>
+
+  <div class="scroll" id="scroll">
+    <!-- các trang được render vào đây -->
+    <div class="pg on" id="pg-a"></div>
+    <div class="pg" id="pg-b"></div>
+    <div class="pg" id="pg-c"></div>
+    <div class="pg" id="pg-d"></div>
+  </div>
+
+  <nav class="botnav" id="botnav"></nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ═══════════ DỮ LIỆU ═══════════ */
+const OWNER = { name:'Ms.Tuyết', phone:'0336249668' };
+const BANK  = { bin:'970422', acc:'0336249668', name:'NGUYEN THI TUYET' };
+const ME    = 's1';
+const SALES = { s1:{name:'Ms. Hạnh', rate:.10}, s2:{name:'Ms. Thu', rate:.10} };
+const HOMES = {
+  h1:{ name:'Long Sơn',   maps:'https://maps.app.goo.gl/CYFbJEGU8J6S112q8' },
+  h2:{ name:'Long Sơn 2', maps:'https://maps.app.goo.gl/CYFbJEGU8J6S112q8' }
+};
+const UNITS = [
+  { id:'u1', home:'h1', name:'Nguyên căn', short:'Long Sơn', parent:null, cap:8,  price:1000000 },
+  { id:'u2', home:'h2', name:'Nguyên căn', short:'Long Sơn 2', parent:null, cap:12, price:2500000 },
+  { id:'u3', home:'h2', name:'Phòng 1', short:'LS2', parent:'u2', cap:3, price:450000 },
+  { id:'u4', home:'h2', name:'Phòng 2', short:'LS2', parent:'u2', cap:3, price:450000 },
+  { id:'u5', home:'h2', name:'Phòng 3', short:'LS2', parent:'u2', cap:3, price:450000 },
+  { id:'u6', home:'h2', name:'Phòng 4', short:'LS2', parent:'u2', cap:3, price:450000 }
+];
+let BOOKINGS = [
+  { id:'LS260702', unit:'u1', guest:'Nguyễn Văn An', ci:3,  co:6,  g:6, price:1200000, sale:'s2', src:'Booking.com', pays:[{d:'28/06/2026',a:3600000}] },
+  { id:'LS260710', unit:'u5', guest:'Hồ Minh Đức',   ci:4,  co:7,  g:2, price:450000,  sale:'s2', src:'Zalo',        pays:[{d:'29/06/2026',a:1350000}] },
+  { id:'LS260705', unit:'u1', guest:'Lý Thu Hà',     ci:6,  co:8,  g:4, price:1000000, sale:'s1', src:'Facebook',    pays:[{d:'01/07/2026',a:500000}] },
+  { id:'LS260711', unit:'u1', guest:'Bùi Khánh Vy',  ci:10, co:13, g:5, price:1000000, sale:'s1', src:'Khách quen',  pays:[{d:'02/07/2026',a:3000000}] },
+  { id:'LS260704', unit:'u2', guest:'Đoàn Gia Bảo',  ci:10, co:12, g:10,price:2500000, sale:'s1', src:'Zalo',        pays:[{d:'02/07/2026',a:1000000}] },
+  { id:'LS260712', unit:'u6', guest:'Trịnh Anh Tú',  ci:12, co:15, g:3, price:450000,  sale:'s2', src:'Facebook',    pays:[{d:'04/07/2026',a:1350000}] },
+  { id:'LS260701', unit:'u1', guest:'Lê Trình',      ci:16, co:18, g:4, price:1000000, sale:'s1', src:'Zalo',        pays:[{d:'07/07/2026',a:500000}] },
+  { id:'LS260706', unit:'u4', guest:'Vũ Hà',         ci:18, co:20, g:3, price:450000,  sale:'s1', src:'Facebook',    pays:[] },
+  { id:'LS260707', unit:'u3', guest:'Phạm Quốc',     ci:20, co:22, g:2, price:450000,  sale:'s2', src:'Booking.com', pays:[{d:'03/07/2026',a:450000}] },
+  { id:'LS260703', unit:'u1', guest:'Trần Mỹ Linh',  ci:24, co:26, g:2, price:1000000, sale:'s1', src:'Khách quen',  pays:[{d:'05/07/2026',a:300000}] },
+  { id:'LS260713', unit:'u6', guest:'Đặng Thu Trang',ci:25, co:28, g:3, price:450000,  sale:'s1', src:'Zalo',        pays:[] },
+  { id:'PEND-01',  unit:'u1', guest:'Ngô Thanh Sơn', ci:13, co:15, g:5, price:1000000, sale:'s2', src:'Facebook',    pays:[], st:'pending', at:'09:12' },
+  { id:'PEND-02',  unit:'u3', guest:'Cao Thị Bích',  ci:22, co:25, g:3, price:450000,  sale:'s2', src:'Zalo',        pays:[], st:'pending', at:'08:40' }
+];
+let EXPENSES = [
+  {d:1,cat:'Wifi',a:220000},{d:2,cat:'Điện',a:780000},{d:3,cat:'Nước',a:210000},
+  {d:5,cat:'Dọn phòng',a:900000},{d:5,cat:'Hoa hồng',a:690000},{d:6,cat:'Ga gối',a:350000},
+  {d:7,cat:'Sửa chữa',a:180000},{d:7,cat:'Marketing',a:500000}
+];
+const HIST = {1:{rev:18400000,exp:5200000},2:{rev:26800000,exp:6100000},3:{rev:14200000,exp:4400000},
+  4:{rev:21600000,exp:5000000},5:{rev:28900000,exp:6800000},6:{rev:24300000,exp:5900000}};
+const DIM=[31,28,31,30,31,30,31], SELLABLE=5, TODAY=8;
+let COMPAID={s1:false,s2:true};
+
+/* ═══════════ TIỆN ÍCH ═══════════ */
+const $=s=>document.querySelector(s);
+const money=n=>n.toLocaleString('vi-VN');
+const trM=n=>(n/1e6).toFixed(1).replace('.',',')+' tr';
+const dmy=d=>`${String(d).padStart(2,'0')}/07/2026`;
+const nights=b=>b.co-b.ci, total=b=>b.price*nights(b);
+const paid=b=>b.pays.reduce((s,p)=>s+p.a,0), owed=b=>total(b)-paid(b);
+const isPend=b=>b.st==='pending';
+const unitOf=id=>UNITS.find(u=>u.id===id);
+const fullName=u=>`${HOMES[u.home].name} – ${u.name}`;
+const live=()=>BOOKINGS.filter(b=>!isPend(b));
+const overlap=(a1,a2,b1,b2)=>a1<b2&&b1<a2;
+const weight=id=>{const k=UNITS.filter(x=>x.parent===id).length;return k||1;};
+let SURF='sale';
+const mine=b=>SURF==='admin'||b.sale===ME;
+
+function family(id){
+  const u=unitOf(id); const ids=[id];
+  if(u.parent) ids.push(u.parent);
+  UNITS.filter(x=>x.parent===id).forEach(x=>ids.push(x.id));
+  return [...new Set(ids)];
+}
+function conflicts(unitId,ci,co,skip){
+  const fam=family(unitId);
+  return BOOKINGS.filter(b=>b.id!==skip&&fam.includes(b.unit)&&overlap(ci,co,b.ci,b.co));
+}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),3000);}
+function stamp(){const d=new Date();$('#ab-stamp').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+
+/* ═══════════ NAV ═══════════ */
+const IC={
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M17 14c2 .5 4 2.3 4 6"/></svg>',
+  coins:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>',
+  dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="9" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/><rect x="3" y="15" width="8" height="6" rx="1.5"/></svg>',
+  badge:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 8 8 11 4.5-3 8-6 8-11V5z"/><path d="m9 12 2 2 4-4"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4c0-1 .8-1.5 2-1.5h12c1 0 2 .5 2 2v15c0 1-.8 1.5-2 1.5H6c-1.2 0-2-.5-2-1.5z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>'
+};
+const NAV={
+  sale:[['a','Trống',IC.check],['b','Lịch',IC.cal],['c','Khách',IC.users],['d','Hoa hồng',IC.coins]],
+  admin:[['a','Tổng quan',IC.dash],['b','Lịch',IC.cal],['c','Duyệt',IC.badge],['d','Sổ thu chi',IC.book]]
+};
+let cur='a';
+function buildNav(){
+  $('#botnav').innerHTML = NAV[SURF].map(([k,label,ic])=>
+    `<button data-k="${k}" aria-selected="${k===cur}">${ic}<span>${label}</span>${k==='c'&&SURF==='admin'?'<span class="nbadge" id="navbadge"></span>':''}</button>`
+  ).join('');
+}
+$('#botnav').onclick=e=>{const b=e.target.closest('button');if(b)go(b.dataset.k);};
+function go(k){
+  cur=k;
+  document.querySelectorAll('#botnav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.k===k));
+  ['a','b','c','d'].forEach(x=>$('#pg-'+x).classList.toggle('on',x===k));
+  $('#scroll').scrollTop=0;
+  renderPage(k);
+}
+
+/* ═══════════ SWITCH TRANG ═══════════ */
+function setSurface(s){
+  SURF=s; cur='a';
+  document.querySelectorAll('.switch button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===s));
+  if(s==='sale'){
+    $('#logo').textContent='LS'; $('#logo').style.background='var(--teal)';
+    $('#ab-name').textContent='Ms. Hạnh'; $('#ab-role').textContent='Sale · vào bằng link riêng';
+  }else{
+    $('#logo').textContent='★'; $('#logo').style.background='var(--brick)';
+    $('#ab-name').textContent='Ms.Tuyết'; $('#ab-role').textContent='Chủ home · toàn quyền';
+  }
+  buildNav();
+  ['a','b','c','d'].forEach(x=>$('#pg-'+x).classList.toggle('on',x==='a'));
+  renderPage('a'); updateBadge();
+}
+document.querySelectorAll('.switch button').forEach(b=>b.onclick=()=>setSurface(b.dataset.s));
+
+/* ═══════════ RENDER TỪNG TRANG ═══════════ */
+function renderPage(k){
+  const fn = (SURF==='sale'?SALE:ADMIN)[k];
+  if(fn) $('#pg-'+k).innerHTML = fn();
+  if(k==='b') setTimeout(()=>{wireCal();$('#pg-b .tl-scroll').scrollLeft=(TODAY-1)*32;},20);
+  if(SURF==='admin'&&k==='a') setTimeout(drawChart,20);
+  updateBadge();
+}
+function updateBadge(){
+  const n=BOOKINGS.filter(isPend).length, el=$('#navbadge');
+  if(el){el.textContent=n;el.classList.toggle('on',n>0&&SURF==='admin');}
+}
+
+/* ─── timeline dùng chung ─── */
+const DOW=['CN','T2','T3','T4','T5','T6','T7'];
+function timeline(){
+  let h=`<div class="tl"><div class="tl-scroll" id="tlS"><div class="grid"><div class="hdr"><div class="corner">Phòng</div>`;
+  for(let d=1;d<=31;d++){const w=new Date(2026,6,d).getDay();
+    h+=`<div class="hc${w===0||w===6?' we':''}${d===TODAY?' td':''}">${DOW[w]}<b>${d}</b></div>`;}
+  h+=`</div>`;
+  UNITS.forEach(u=>{
+    h+=`<div class="trow"><div class="unit${u.parent?' kid':''}">${u.name}<small>${HOMES[u.home].name}</small></div><div class="cells" data-u="${u.id}">`;
+    for(let d=1;d<=31;d++){const w=new Date(2026,6,d).getDay();const cls=['cel'];
+      if(w===0||w===6)cls.push('we'); if(d<TODAY)cls.push('past');
+      if(conflicts(u.id,d,d+1).some(b=>b.unit!==u.id))cls.push('blk');
+      h+=`<div class="${cls.join(' ')}" data-d="${d}"></div>`;}
+    BOOKINGS.filter(b=>b.unit===u.id).forEach(b=>{
+      const left=(b.ci-0.5)*32, wid=nights(b)*32;
+      let k,label;
+      if(isPend(b)){k='t-pend';label=mine(b)?`⏳ ${b.guest}`:`🔒 Đã đặt`;}
+      else if(mine(b)){k='t-mine';label=`${b.guest}`;}
+      else {k='t-other';label=`🔒 <span class="tg">${SALES[b.sale].name}</span>`;}
+      h+=`<div class="tape ${k}" data-b="${b.id}" style="left:${left}px;width:${wid}px">${label}</div>`;
+    });
+    h+=`</div></div>`;
+  });
+  return h+`</div></div></div>`;
+}
+let drag=null;
+function wireCal(){
+  document.querySelectorAll('#pg-b .cells').forEach(row=>{
+    row.addEventListener('pointerdown',e=>{
+      const c=e.target.closest('.cel'); if(!c||c.classList.contains('past')||c.classList.contains('blk'))return;
+      drag={u:row.dataset.u,a:+c.dataset.d,b:+c.dataset.d,row};paint();
+      try{row.setPointerCapture(e.pointerId);}catch(_){}
+    });
+    row.addEventListener('pointermove',e=>{
+      if(!drag||drag.row!==row)return;
+      const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest('.cel');
+      if(c&&row.contains(c)){drag.b=+c.dataset.d;paint();}
+    });
+    row.addEventListener('pointerup',()=>{
+      if(!drag)return;
+      const ci=Math.min(drag.a,drag.b),co=Math.max(drag.a,drag.b)+1,u=drag.u;
+      document.querySelectorAll('.cel.sel').forEach(c=>c.classList.remove('sel'));drag=null;
+      if(conflicts(u,ci,co).length)return toast('Khoảng ngày này đã có khách.');
+      newBooking(u,ci,co);
+    });
+  });
+  document.querySelectorAll('#pg-b .tape').forEach(t=>t.onclick=()=>detail(t.dataset.b));
+}
+function paint(){if(!drag)return;const lo=Math.min(drag.a,drag.b),hi=Math.max(drag.a,drag.b);
+  drag.row.querySelectorAll('.cel').forEach(c=>{const d=+c.dataset.d;
+    c.classList.toggle('sel',d>=lo&&d<=hi&&!c.classList.contains('past')&&!c.classList.contains('blk'));});}
+
+/* ═══════════ TRANG SALE ═══════════ */
+const SALE={
+  a(){ // Kiểm tra trống (home)
+    const todayRooms=UNITS.map(u=>{
+      const busy=conflicts(u.id,TODAY,TODAY+1).length>0;
+      return `<div class="rm ${busy?'busy':'free'}"><div class="rn">${u.name}<small>${HOMES[u.home].name}</small></div>
+        <div class="rs">${busy?'● Có khách':'○ Trống'}</div></div>`;
+    }).join('');
+    return `<h2>Còn phòng không?</h2>
+      <p class="sub">Đang chat với khách? Nhập ngày, xem còn gì, giữ chỗ hoặc gửi chủ duyệt.</p>
+      <div class="eyebrow mt">Phòng hôm nay · ${dmy(TODAY)}</div>
+      <div class="today-strip">${todayRooms}</div>
+      <div class="card mt">
+        <div class="grid2">
+          <div><label>Nhận phòng</label><input type="date" id="f-in" value="2026-07-16" min="2026-07-01" max="2026-07-31"></div>
+          <div><label>Trả phòng</label><input type="date" id="f-out" value="2026-07-18" min="2026-07-02" max="2026-08-01"></div>
+        </div>
+        <div class="mt"><label>Số khách</label><input type="number" id="f-g" value="4" min="1" max="14"></div>
+        <button class="btn btn-p mt" onclick="findFree()">Tìm phòng trống</button>
+        <div class="res" id="res"></div>
+      </div>`;
+  },
+  b(){ return `<h2>Lịch phòng</h2><p class="sub">Vuốt ngang để xem cả tháng. Ô hồng của bạn, ô xám của sale khác.</p>
+    <div class="tlbar"><div class="leg"><span><i class="i-free"></i>Trống</span><span><i class="i-tape"></i>Của bạn</span><span><i class="i-lock"></i>Sale khác</span><span><i class="i-pend"></i>Chờ duyệt</span></div></div>
+    ${timeline()}`;
+  },
+  c(){ // Khách của tôi
+    const mineB=BOOKINGS.filter(b=>b.sale===ME).sort((a,b)=>a.ci-b.ci);
+    if(!mineB.length) return `<h2>Khách của tôi</h2><div class="empty"><div class="big">🗒️</div>Chưa có khách nào.<br>Sang tab Trống để chốt đơn đầu tiên.</div>`;
+    return `<h2>Khách của tôi</h2><p class="sub">${mineB.length} đơn · bấm để xem tin nhắn & QR thu tiền.</p>
+      <div class="mt">${mineB.map(b=>bcard(b)).join('')}</div>`;
+  },
+  d(){ // Hoa hồng của tôi
+    const mineB=live().filter(b=>b.sale===ME);
+    const rev=mineB.reduce((s,b)=>s+total(b),0), hh=Math.round(rev*SALES[ME].rate);
+    return `<h2>Hoa hồng của tôi</h2><p class="sub">Tháng 7 · tính 10% trên đơn đã được chủ duyệt.</p>
+      <div class="kpis"><div class="kpi hero"><div class="l">Hoa hồng tháng 7</div><div class="v">${trM(hh)}</div><div class="s">${mineB.length} đơn đã duyệt</div></div>
+      <div class="kpi"><div class="l">Doanh số</div><div class="v">${trM(rev)}</div><div class="s">tổng đơn của bạn</div></div></div>
+      <div class="card mt"><div class="eyebrow" style="margin-bottom:8px">Chi tiết đơn</div>
+      ${mineB.map(b=>`<div class="trow2"><div>${b.guest}<div class="muted">${unitOf(b.unit).name} · ${b.ci}–${b.co}/7</div></div>
+        <div style="text-align:right" class="mono">${money(total(b))}<div class="muted">+${money(Math.round(total(b)*.1))}</div></div></div>`).join('')}</div>
+      <div class="note">Chủ chốt trả hoa hồng cuối tháng. Đơn <b>chờ duyệt</b> chưa được tính vào đây.</div>`;
+  }
+};
+function bcard(b){
+  const pend=isPend(b), o=owed(b);
+  const pill=pend?`<span class="pill p-pend">⏳ chờ duyệt</span>`:o>0?`<span class="pill p-owe">còn ${money(o)}</span>`:`<span class="pill p-ok">đã đủ</span>`;
+  return `<div class="bcard" onclick="detail('${b.id}')">
+    <div class="t"><b>${b.guest}</b>${pill}</div>
+    <div class="m">${fullName(unitOf(b.unit))} · ${b.ci}/7 → ${b.co}/7 · ${b.g} khách</div>
+    ${!pend?`<div class="amt"><span>Tổng ${money(total(b))}</span>${o>0?`<span class="owe">còn ${money(o)}</span>`:`<span class="paid">đã thu đủ</span>`}</div>`:''}
+  </div>`;
+}
+
+/* ═══════════ TRANG ADMIN ═══════════ */
+function agg(m){
+  if(m===7){const b=live();return{rev:b.reduce((s,x)=>s+total(x),0),exp:EXPENSES.reduce((s,e)=>s+e.a,0),
+    rn:b.reduce((s,x)=>s+nights(x)*weight(x.unit),0),cnt:b.length};}
+  const h=HIST[m];return h?{...h,rn:0,cnt:0}:{rev:0,exp:0,rn:0,cnt:0};
+}
+const ADMIN={
+  a(){ // Tổng quan
+    const a=agg(7),profit=a.rev-a.exp,cap=SELLABLE*31;
+    const oweTotal=live().reduce((s,b)=>s+owed(b),0);
+    const nPend=BOOKINGS.filter(isPend).length;
+    const debts=live().filter(b=>owed(b)>0).sort((x,y)=>x.co-y.co).slice(0,4);
+    return `<h2>Tổng quan · Tháng 7</h2><p class="sub">Số liệu cập nhật theo thời gian thực.</p>
+      ${nPend?`<div class="callout" onclick="go('c')"><div class="n">${nPend}</div><div class="tx">Có ${nPend} booking sale gửi đang chờ bạn duyệt</div><div class="go">›</div></div>`:''}
+      <div class="kpis">
+        <div class="kpi"><div class="l">Doanh thu</div><div class="v">${trM(a.rev)}</div><div class="s">${a.cnt} đơn</div></div>
+        <div class="kpi warn"><div class="l">Chi phí</div><div class="v">${trM(a.exp)}</div><div class="s">${Math.round(a.exp/a.rev*100)}% doanh thu</div></div>
+        <div class="kpi hero"><div class="l">Lãi</div><div class="v">${trM(profit)}</div><div class="s">biên ${Math.round(profit/a.rev*100)}%</div></div>
+        <div class="kpi"><div class="l">Công suất</div><div class="v">${Math.round(a.rn/cap*100)}%</div><div class="s">${a.rn}/${cap} đêm-phòng</div></div>
+      </div>
+      <div class="card mt"><div class="eyebrow" style="margin-bottom:4px">Doanh thu 6 tháng</div><div id="chart"></div></div>
+      <div class="card mt"><div class="eyebrow" style="margin-bottom:6px">Công nợ cần thu · ${money(oweTotal)}</div>
+      ${debts.map(b=>`<div class="trow2"><div>${b.guest}<div class="muted">${unitOf(b.unit).name} · trả ${b.co}/7</div></div>
+        <div class="owe mono">${money(owed(b))}</div></div>`).join('')||'<div class="muted" style="padding:8px 0">Không còn nợ.</div>'}</div>`;
+  },
+  b(){ return `<h2>Lịch tất cả phòng</h2><p class="sub">Bạn thấy hết. Kéo chọn ngày trống để tạo đơn.</p>
+    <div class="tlbar"><div class="leg"><span><i class="i-free"></i>Trống</span><span><i class="i-tape"></i>Đã đặt</span><span><i class="i-pend"></i>Chờ duyệt</span></div></div>
+    ${timeline()}`;
+  },
+  c(){ // Duyệt
+    const list=BOOKINGS.filter(isPend).sort((a,b)=>a.ci-b.ci);
+    if(!list.length) return `<h2>Chờ duyệt</h2><div class="empty"><div class="big">✅</div>Hết booking chờ duyệt.<br>Sale gửi lên là hiện ở đây.</div>`;
+    return `<h2>Chờ duyệt</h2><p class="sub">${list.length} đơn. Duyệt thì vào doanh thu & sinh mã; từ chối thì nhả ngày.</p>
+      <div class="mt">${list.map(b=>{const u=unitOf(b.unit);return `<div class="appr">
+        <div class="row"><div class="who"><b>${b.guest}</b><small>${fullName(u)} · ${b.ci}/7 → ${b.co}/7 · ${nights(b)} đêm · ${b.g} khách<br>Nguồn ${b.src} · <span class="by">${SALES[b.sale].name} gửi ${b.at}</span></small></div><div class="amt">${money(total(b))}</div></div>
+        <div class="acts"><button class="btn btn-o btn-sm" onclick="reject('${b.id}')">✕ Từ chối</button><button class="btn btn-p btn-sm" onclick="approve('${b.id}')">✓ Duyệt</button></div>
+      </div>`;}).join('')}</div>`;
+  },
+  d(){ // Sổ thu chi
+    const ins=[];live().forEach(b=>b.pays.forEach(p=>ins.push({d:p.d,a:p.a,who:b.guest})));
+    const inT=ins.reduce((s,x)=>s+x.a,0),exT=EXPENSES.reduce((s,e)=>s+e.a,0);
+    const byCat={};EXPENSES.forEach(e=>byCat[e.cat]=(byCat[e.cat]||0)+e.a);
+    const mx=Math.max(...Object.values(byCat),1);
+    const comRows=Object.entries(SALES).map(([id,s])=>{
+      const rev=live().filter(b=>b.sale===id).reduce((t,b)=>t+total(b),0),hh=Math.round(rev*s.rate);
+      return `<div class="trow2"><div>${s.name}<div class="muted">${live().filter(b=>b.sale===id).length} đơn · ${money(rev)}</div></div>
+        <div style="text-align:right">${COMPAID[id]?`<span class="pill p-ok">đã trả</span>`:`<button class="btn btn-o btn-sm" style="width:auto;padding:6px 10px" onclick="payCom('${id}',${hh})">Trả ${trM(hh)}</button>`}</div></div>`;
+    }).join('');
+    return `<h2>Sổ thu chi · Tháng 7</h2>
+      <div class="kpis"><div class="kpi"><div class="l">Đã thu</div><div class="v" style="color:var(--teal)">${trM(inT)}</div><div class="s">${ins.length} lần</div></div>
+      <div class="kpi warn"><div class="l">Đã chi</div><div class="v">${trM(exT)}</div><div class="s">${EXPENSES.length} khoản</div></div></div>
+      <div class="card mt"><div class="eyebrow" style="margin-bottom:8px">Ghi một khoản chi</div>
+        <div class="grid3"><select id="e-cat">${['Điện','Nước','Wifi','Dọn phòng','Ga gối','Sửa chữa','Marketing','Khác'].map(c=>`<option>${c}</option>`).join('')}</select>
+        <input type="number" id="e-amt" placeholder="Số tiền"><input type="number" id="e-day" value="${TODAY}" min="1" max="31"></div>
+        <button class="btn btn-p mt" onclick="addExp()">Lưu khoản chi</button></div>
+      <div class="card mt"><div class="eyebrow" style="margin-bottom:6px">Chi theo mục</div>
+      ${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="padding:7px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${k}</span><span class="mono">${money(v)}</span></div><div class="bar2 red"><i style="width:${v/mx*100}%"></i></div></div>`).join('')}</div>
+      <div class="card mt"><div class="eyebrow" style="margin-bottom:6px">Hoa hồng sale</div>${comRows}
+      <div class="note">Bấm <b>Trả</b> sẽ tự ghi một khoản chi mục Hoa hồng — không nhập tay hai lần.</div></div>`;
+  }
+};
+function drawChart(){
+  const el=$('#chart');if(!el)return;
+  const W=320,H=130,PL=30,PB=20,PT=6;
+  const data=Array.from({length:7},(_,i)=>agg(i+1));
+  const max=Math.max(...data.map(d=>d.rev),1),step=(W-PL)/7,bw=step*.3,ph=H-PT-PB;
+  const y=v=>PT+ph-(v/max)*ph;
+  let g=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  [0,.5,1].forEach(f=>{const yy=y(max*f);g+=`<line x1="${PL}" x2="${W}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text class="axis" x="0" y="${yy+3}">${f?trM(max*f):'0'}</text>`;});
+  data.forEach((d,i)=>{const cx=PL+step*(i+.5);
+    g+=`<rect x="${cx-bw-1}" y="${y(d.rev)}" width="${bw}" height="${PT+ph-y(d.rev)}" rx="2" fill="var(--teal)"/>`;
+    g+=`<rect x="${cx+1}" y="${y(d.exp)}" width="${bw}" height="${PT+ph-y(d.exp)}" rx="2" fill="var(--brick)" opacity=".8"/>`;
+    g+=`<text class="axis" x="${cx}" y="${H-7}" text-anchor="middle">T${i+1}</text>`;});
+  el.innerHTML=g+`</svg><div style="display:flex;gap:14px;font-size:10px;color:var(--ink-3);margin-top:4px"><span><i style="display:inline-block;width:8px;height:8px;background:var(--teal);border-radius:2px"></i> Thu</span><span><i style="display:inline-block;width:8px;height:8px;background:var(--brick);border-radius:2px"></i> Chi</span></div>`;
+}
+
+/* ═══════════ SHEET ═══════════ */
+function openSheet(html){$('#sheet').innerHTML=html;$('#sheet').classList.add('on');$('#scrim').classList.add('on');}
+function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');}
+$('#scrim').onclick=closeSheet;
+
+function msgFor(b){
+  const u=unitOf(b.unit),t=total(b),p=paid(b),o=owed(b),last=b.pays[b.pays.length-1];
+  return `LONG SƠN HOMESTAY – XÁC NHẬN ĐẶT PHÒNG
+Tên khách : ${b.guest}
+✍️ Đặt home : ${HOMES[u.home].name} ${u.parent?'– '+u.name:''}
+✍️ Vị trí Home : ${HOMES[u.home].maps}
+🕒 Check in 14h ngày ${b.ci}/7/2026
+🕛 Check out 12h ngày ${b.co}/7/2026
+✍️ số khách : ${b.g} NL
+✍️ Tổng tiền ${nights(b)} đêm: ${money(b.price)} x ${nights(b)}= ${money(t)}VND,
+${last?`✍️Ngày ${last.d} cọc ${money(p)} VND\nCÒN LẠI ${money(o)} VNĐ vui lòng thanh toán khi nhận home`:'Vui lòng cọc để giữ phòng'}
+${OWNER.name} : ${OWNER.phone} ( chủ home )
+⸻
+🌿 Rất cảm ơn gia đình đã tin tưởng chọn Long Sơn Homestay. Home mong mang lại kỳ nghỉ tuyệt vời nhất cho gia đình!`;
+}
+function detail(id){
+  const b=BOOKINGS.find(x=>x.id===id);if(!b)return;const u=unitOf(b.unit);
+  const grab=`<div class="grab"></div>`;
+  // pending
+  if(isPend(b)&&mine(b)){
+    const owner=SURF==='admin';
+    return openSheet(`<div class="sh-h">${grab}<div><div class="code">⏳ CHỜ DUYỆT</div><h3>${b.guest}</h3></div><div style="flex:1"></div><button class="x" onclick="closeSheet()">✕</button></div>
+      <div class="sh-b"><div class="kv"><span>Căn</span><b>${fullName(u)}</b></div>
+      <div class="kv"><span>Nhận / Trả</span><b>${dmy(b.ci)} → ${dmy(b.co)}</b></div>
+      <div class="kv"><span>Đêm · khách</span><b>${nights(b)} đêm · ${b.g}</b></div>
+      <div class="kv"><span>Giá trị</span><b class="mono">${money(total(b))}</b></div>
+      <div class="kv"><span>Sale gửi</span><b>${SALES[b.sale].name} · ${b.at}</b></div>
+      ${owner?`<div class="grid2 mt"><button class="btn btn-o" onclick="reject('${b.id}');closeSheet()">✕ Từ chối</button><button class="btn btn-p" onclick="approve('${b.id}');closeSheet()">✓ Duyệt</button></div><div class="note">Duyệt xong mới sinh mã LS…, tạo tin nhắn + QR và cộng vào doanh thu.</div>`
+      :`<div class="note">Đã gửi chủ, đang chờ duyệt. Ngày đã khoá nên không ai đặt trùng. Duyệt xong bạn sẽ thấy nút tin nhắn & QR ở đây.</div>`}</div>`);
+  }
+  // của sale khác
+  if(!mine(b)){
+    return openSheet(`<div class="sh-h">${grab}<div><div class="code">${'•'.repeat(8)}</div><h3>Đã đặt</h3></div><div style="flex:1"></div><button class="x" onclick="closeSheet()">✕</button></div>
+      <div class="sh-b"><div class="kv"><span>Căn</span><b>${fullName(u)}</b></div>
+      <div class="kv"><span>Ngày</span><b>${b.ci}/7 → ${b.co}/7</b></div>
+      <div class="kv"><span>Sale phụ trách</span><b>${SALES[b.sale].name}</b></div>
+      <div class="kv"><span>Tên khách</span><b class="mask">ẩn</b></div>
+      <div class="kv"><span>Tổng tiền</span><b class="mask">ẩn</b></div>
+      <div class="note"><b>Vì sao ẩn?</b> Đơn của sale khác. Bạn thấy đủ ngày bận để khỏi chốt trùng, nhưng tên khách và tiền thì không — chặn ở tầng database, không phải chỉ ẩn nút.</div></div>`);
+  }
+  // của mình / admin
+  const t=total(b),p=paid(b),o=owed(b);
+  const qr=(amt,kind)=>`https://img.vietqr.io/image/${BANK.bin}-${BANK.acc}-compact2.png?amount=${amt}&addInfo=${encodeURIComponent(b.id+' '+kind)}&accountName=${encodeURIComponent(BANK.name)}`;
+  openSheet(`<div class="sh-h">${grab}<div><div class="code mono">${b.id}</div><h3>${b.guest}</h3></div><div style="flex:1"></div><button class="x" onclick="closeSheet()">✕</button></div>
+    <div class="sh-b">
+    <div class="kv"><span>Căn</span><b>${fullName(u)}</b></div>
+    <div class="kv"><span>Nhận / Trả</span><b>14h ${dmy(b.ci)} → 12h ${dmy(b.co)}</b></div>
+    <div class="kv"><span>Đêm · khách</span><b>${nights(b)} đêm · ${b.g} người</b></div>
+    <div class="kv"><span>Sale</span><b>${SALES[b.sale].name}</b></div>
+    <div class="tot"><div class="kv"><span>${money(b.price)} × ${nights(b)}</span><b class="mono">${money(t)}</b></div>
+    <div class="kv"><span>Đã thu</span><b class="mono paid">${money(p)}</b></div>
+    <div class="kv"><span>Còn lại</span><b class="mono owe">${money(o)}</b></div></div>
+    <div class="grid2"><button class="btn btn-p" onclick="copyMsg('${b.id}')">📋 Copy tin nhắn</button><button class="btn btn-o" onclick="$('#qr').classList.toggle('on')">📱 QR thu tiền</button></div>
+    <div class="qr" id="qr">${o>0?`<img src="${qr(o,'thanh toan')}" alt="QR" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'cap',textContent:'(Xem QR cần mạng — link đã tạo đúng)'}))">
+      <div class="cap"><b class="mono">${money(o)} đ</b> · nội dung <b class="mono">${b.id} thanh toan</b><br>Khách quét là điền sẵn. Sao kê tìm <b class="mono">${b.id}</b> ra ngay.</div>`:`<div class="cap">Đã thu đủ.</div>`}</div>
+    <label class="mt" style="margin-top:14px">Tin nhắn gửi khách</label>
+    <textarea class="msg mono" id="m-${b.id}" readonly>${msgFor(b)}</textarea>
+    </div>`);
+}
+function copyMsg(id){const t=$('#m-'+id);t.select();t.setSelectionRange(0,99999);
+  navigator.clipboard?.writeText(t.value).then(()=>toast('Đã copy — dán vào Zalo.'),()=>toast('Bôi đen rồi copy tay nhé.'));}
+
+/* ═══════════ TẠO / DUYỆT ═══════════ */
+function newBooking(uid,ci,co){
+  const u=unitOf(uid),n=co-ci;
+  openSheet(`<div class="sh-h"><div class="grab"></div><div><div class="code">ĐẶT PHÒNG MỚI</div><h3>${fullName(u)}</h3></div><div style="flex:1"></div><button class="x" onclick="closeSheet()">✕</button></div>
+    <div class="sh-b"><div class="kv"><span>Nhận / Trả</span><b>${dmy(ci)} → ${dmy(co)}</b></div>
+    <div class="kv"><span>Số đêm</span><b>${n} đêm</b></div>
+    <label class="mt" style="margin-top:14px">Tên khách</label><input id="n-name" placeholder="Mr. / Ms. ...">
+    <div class="grid2 mt"><div><label>Số khách</label><input type="number" id="n-g" value="${Math.min(u.cap,4)}" max="${u.cap}" min="1"></div>
+    <div><label>Giá / đêm</label><input type="number" id="n-p" value="${u.price}" step="50000"></div></div>
+    <button class="btn btn-d mt" onclick="hold('${uid}',${ci},${co})">⏱ Giữ chỗ 30 phút</button>
+    <button class="btn btn-p mt" onclick="confirmBk('${uid}',${ci},${co})">${SURF==='admin'?'Chốt & tạo tin nhắn':'Gửi chủ duyệt'}</button>
+    <div class="note">${SURF==='admin'?'<b>Giữ chỗ 30 phút</b> khoá ngày trong lúc thương lượng, hết giờ tự nhả.':'<b>Gửi chủ duyệt:</b> ngày khoá ngay để khỏi trùng, nhưng chưa vào doanh thu tới khi chủ duyệt.'}</div></div>`);
+  setTimeout(()=>$('#n-name')?.focus(),100);
+}
+function hold(uid,ci,co){
+  if(conflicts(uid,ci,co).length){closeSheet();return toast('Vừa có người đặt trước.');}
+  BOOKINGS.push({id:'HOLD'+Date.now()%1000,unit:uid,guest:'Đang giữ',ci,co,g:1,price:0,sale:ME,pays:[],st:'pending',at:'giữ chỗ'});
+  closeSheet();rerender();toast('Đã giữ chỗ 30 phút.');
+}
+function confirmBk(uid,ci,co){
+  const name=$('#n-name').value.trim();if(!name)return toast('Nhập tên khách đã.');
+  if(conflicts(uid,ci,co).length){closeSheet();return toast('Vừa có người đặt trước.');}
+  const b={unit:uid,guest:name,src:'Zalo',ci,co,g:+$('#n-g').value,price:+$('#n-p').value,sale:ME,pays:[]};
+  if(SURF!=='admin'){b.id='PEND-'+(BOOKINGS.filter(isPend).length+3);b.st='pending';b.at='vừa xong';
+    BOOKINGS.push(b);closeSheet();rerender();toast('Đã gửi chủ duyệt. Ngày đã khoá.');
+  }else{b.id='LS2607'+String(BOOKINGS.length+10).slice(-2);BOOKINGS.push(b);rerender();detail(b.id);toast('Đã tạo '+b.id);}
+}
+function approve(id){const b=BOOKINGS.find(x=>x.id===id);if(!b)return;
+  delete b.st;b.id='LS2607'+String(BOOKINGS.length+20).slice(-2);rerender();toast('Đã duyệt · '+b.guest+' → vào doanh thu');}
+function reject(id){BOOKINGS=BOOKINGS.filter(x=>x.id!==id);rerender();toast('Đã từ chối — nhả ngày ra.');}
+function addExp(){const a=+$('#e-amt').value;if(!a)return toast('Nhập số tiền.');
+  EXPENSES.push({d:+$('#e-day').value,cat:$('#e-cat').value,a});rerender();toast('Đã ghi chi phí. Lãi/lỗ cập nhật ngay.');}
+function payCom(id,amt){COMPAID[id]=true;EXPENSES.push({d:TODAY,cat:'Hoa hồng',a:amt});rerender();toast(`Đã trả hoa hồng ${SALES[id].name}.`);}
+function findFree(){
+  const ci=+$('#f-in').value.slice(-2),co=+$('#f-out').value.slice(-2),g=+$('#f-g').value;
+  if(!(co>ci))return toast('Ngày trả phải sau ngày nhận.');
+  $('#res').innerHTML=UNITS.map(u=>{
+    const c=conflicts(u.id,ci,co),small=u.cap<g,ok=!c.length&&!small;
+    let why=`Tối đa ${u.cap} khách`;
+    if(small)why=`Chỉ chứa ${u.cap} khách`;else if(c.length)why=c[0].unit===u.id?`Bận ${c[0].ci}–${c[0].co}/7`:`Khoá vì ${unitOf(c[0].unit).name} có khách`;
+    return `<div class="rc ${ok?'ok':'no'}"><div class="h"><span>${ok?'✅':'⛔'}</span><b>${fullName(u)}</b><span class="price mono">${money(u.price*(co-ci))}</span></div>
+      <div class="why">${why}</div>
+      ${ok?`<div class="act"><button class="btn btn-d btn-sm" onclick="newBooking('${u.id}',${ci},${co})">Chọn phòng này</button></div>`:''}</div>`;
+  }).join('');
+}
+
+/* ═══════════ RE-RENDER + REALTIME ═══════════ */
+function rerender(){renderPage(cur);updateBadge();stamp();}
+setInterval(stamp,180000);
+setTimeout(()=>{
+  BOOKINGS.push({id:'PEND-99',unit:'u4',guest:'Khách mới của Thu',ci:8,co:10,g:2,price:450000,sale:'s2',src:'Zalo',pays:[],st:'pending',at:'vừa xong'});
+  rerender();
+  toast(SURF==='admin'?'⚡ Ms. Thu vừa gửi 1 booking chờ duyệt':'⚡ Lịch vừa cập nhật');
+},15000);
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
+setSurface('sale');
+</script>

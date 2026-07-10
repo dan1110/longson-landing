@@ -10,7 +10,7 @@ import { money, moneyShort, dm } from '@/lib/format';
 import { STATUS_LABEL } from '@/lib/booking';
 import type { BookingStatus } from '@/lib/database.types';
 import { SaleForm } from './SaleFormSheet';
-import { rotateSaleToken, payCommission } from '../actions';
+import { payCommission } from '../actions';
 
 export interface SaleBookingLite {
   id: string;
@@ -58,16 +58,9 @@ export function SalesTable({ rows, siteUrl }: { rows: SaleRow[]; siteUrl: string
       { label: 'Xem chi tiết', icon: 'search' as const, onClick: () => setDetail(r) },
       { label: 'Sửa', icon: 'edit' as const, onClick: () => setEditSale(r) },
       {
-        label: 'Đổi link',
-        icon: 'share' as const,
-        onClick: () => {
-          if (confirm(`Đổi link của ${r.name}? Link cũ ngừng hoạt động ngay.`)) rotateSaleToken(r.id);
-        },
-      },
-      {
-        label: 'Copy link',
+        label: 'Copy link đặt phòng',
         icon: 'copy' as const,
-        onClick: () => r.saleToken && navigator.clipboard.writeText(`${siteUrl}/s/${r.saleToken}`),
+        onClick: () => navigator.clipboard.writeText(`${siteUrl}/availability`),
       },
     ];
   }
@@ -194,7 +187,7 @@ export function SalesTable({ rows, siteUrl }: { rows: SaleRow[]; siteUrl: string
 function SaleDetail({ row, siteUrl }: { row: SaleRow; siteUrl: string }) {
   const [paying, startPay] = useTransition();
   const [copied, setCopied] = useState(false);
-  const link = row.saleToken ? `${siteUrl}/s/${row.saleToken}` : '';
+  const link = `${siteUrl}/availability`;
 
   return (
     <div className="space-y-3">

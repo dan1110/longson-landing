@@ -2,12 +2,22 @@
 import Link from 'next/link';
 import { Card, Eyebrow, PageTitle } from '@/components/ui';
 import { Icon } from '@/components/Icon';
+import { sheetsConfigured } from '@/lib/sheets';
+import { SyncSheetButton } from './SyncSheetButton';
 import { signOut } from '../actions';
 
 export default async function SettingsPage() {
+  const sheetOk = sheetsConfigured();
   return (
     <div className="fade-in space-y-4">
       <PageTitle title="Cài đặt" sub="Nhập / xuất dữ liệu, tài khoản." />
+
+      <Card className="lg:max-w-md">
+        <Eyebrow>Google Sheet</Eyebrow>
+        <div className="mt-3">
+          <SyncSheetButton configured={sheetOk} />
+        </div>
+      </Card>
 
       <Card className="lg:max-w-md">
         <Eyebrow>Dữ liệu</Eyebrow>

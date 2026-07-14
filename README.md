@@ -86,6 +86,16 @@ chính xác 100% và test trên dữ liệu của bạn.
 Tên các home/căn/phòng, giá, danh sách sale + tỉ lệ hoa hồng, tài khoản chủ/quản lý.
 Mình sẽ thay `supabase/seed.sql` (hoặc nhập trực ttiếp sau khi deploy).
 
+### 4. Google Sheet — tự đồng bộ dữ liệu (Khách / Sale / Thu chi)
+Toàn bộ dữ liệu tự đẩy lên Google Sheet **sau mỗi thay đổi** (chạy nền, không làm
+chậm thao tác). Sheet là bản sao; Supabase vẫn là nguồn gốc. Ba sheet: **Khách**
+(STT · Ngày · Tên · SĐT · Số tiền ở), **Sale** (thông tin + hiệu quả), **Thu chi**
+(mọi giao dịch). Cần điền 3 biến `GOOGLE_SHEETS_*` + `SUPABASE_SERVICE_ROLE_KEY`
+vào `.env.local` — xem hướng dẫn tạo Service Account chi tiết trong `.env.example`.
+Tóm tắt: bật Google Sheets API → tạo Service Account + key JSON → **Share sheet cho
+`client_email` quyền Editor** → điền env. Chưa điền thì app vẫn chạy bình thường,
+đồng bộ tự tắt. Có nút **Đồng bộ ngay** ở tab Cài đặt để chạy lại thủ công.
+
 ---
 
 ## ☁️ Deploy (miễn phí)

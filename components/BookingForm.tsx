@@ -22,6 +22,7 @@ import { MoneyInput } from './MoneyInput';
 const SOURCES = [
   { v: 'zalo', l: 'Zalo' },
   { v: 'facebook', l: 'Facebook' },
+  { v: 'googlemaps', l: 'Google Maps' },
   { v: 'referral', l: 'Giới thiệu' },
   { v: 'ota', l: 'OTA' },
   { v: 'walk_in', l: 'Khách vãng lai' },

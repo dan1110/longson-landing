@@ -40,7 +40,6 @@ export default function LoginPage() {
             priority
             className="w-40 h-40 object-contain"
           />
-          <p className="text-xs text-[var(--ink-3)] mt-1">Trang quản lý</p>
         </div>
 
         <form onSubmit={onSubmit} className="bg-white border border-[var(--line)] rounded-2xl p-5 space-y-4">

@@ -397,6 +397,7 @@ function BookingForm({
         <select className={inputCls} value={source} onChange={(e) => setSource(e.target.value)}>
           <option value="zalo">Zalo</option>
           <option value="facebook">Facebook</option>
+          <option value="googlemaps">Google Maps</option>
           <option value="referral">Giới thiệu</option>
           <option value="ota">OTA</option>
           <option value="walk_in">Khách vãng lai</option>

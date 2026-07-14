@@ -50,6 +50,7 @@ export const SOURCE_LABEL: Record<string, string> = {
   ota: 'OTA',
   referral: 'Giới thiệu',
   walk_in: 'Khách vãng lai',
+  googlemaps: 'Google Maps',
 };
 
 /** Nhãn danh mục thu/chi. */
@@ -58,9 +59,27 @@ export const CATEGORY_LABEL: Record<string, string> = {
   balance: 'Tiền còn lại',
   electricity: 'Tiền điện',
   water: 'Tiền nước',
-  cleaning: 'Dọn dẹp',
+  internet: 'Internet',
+  cleaning: 'Dọn dẹp - Giặt là',
   commission: 'Hoa hồng sale',
-  supplies: 'Vật tư',
-  maintenance: 'Sửa chữa',
+  supplies: 'Đồ dùng - Vật tư',
+  maintenance: 'Bảo trì - Sửa chữa',
+  marketing: 'Marketing',
+  rent: 'Tiền thuê nhà',
+  salary: 'Lương nhân viên',
   other: 'Khác',
 };
+
+/** Nhãn phương thức thanh toán. */
+export const METHOD_LABEL: Record<string, string> = {
+  cash: 'Tiền mặt',
+  transfer: 'Chuyển khoản',
+  ewallet: 'Ví điện tử',
+};
+
+/** Nhãn tình trạng thanh toán của 1 đơn (suy ra từ số đã thu / tổng tiền). */
+export function paymentStatus(total: number, paidAmount: number): string {
+  if (paidAmount <= 0) return 'Chưa thu';
+  if (paidAmount >= total) return 'Đã thu đủ';
+  return 'Thu một phần';
+}

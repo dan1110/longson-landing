@@ -4,15 +4,13 @@
 import { useState } from 'react';
 import { addTransaction } from '../actions';
 import { toISODate } from '@/lib/format';
+import { CATEGORY_LABEL, METHOD_LABEL } from '@/lib/booking';
 
+// Hạng mục chi — theo đúng bộ danh mục chủ home đang dùng thực tế.
 const CATS = [
-  { v: 'electricity', l: 'Tiền điện' },
-  { v: 'water', l: 'Tiền nước' },
-  { v: 'cleaning', l: 'Dọn dẹp' },
-  { v: 'supplies', l: 'Vật tư' },
-  { v: 'maintenance', l: 'Sửa chữa' },
-  { v: 'other', l: 'Khác' },
-];
+  'electricity', 'water', 'internet', 'cleaning', 'maintenance', 'supplies',
+  'commission', 'marketing', 'rent', 'salary', 'other',
+].map((v) => ({ v, l: CATEGORY_LABEL[v] }));
 
 const inputCls =
   'w-full p-3 border-[1.5px] border-[var(--line)] rounded-xl text-[15px] bg-white focus:outline-none focus:border-[var(--teal)]';
@@ -68,8 +66,9 @@ export function ExpenseForm({ onDone }: { onDone: () => void }) {
         <div>
           <label className={labelCls}>Hình thức</label>
           <select className={inputCls} value={method} onChange={(e) => setMethod(e.target.value)}>
-            <option value="cash">Tiền mặt</option>
-            <option value="transfer">Chuyển khoản</option>
+            {Object.entries(METHOD_LABEL).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
           </select>
         </div>
       </div>

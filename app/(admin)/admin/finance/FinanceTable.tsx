@@ -8,7 +8,7 @@ import { RowMenu } from '@/components/RowMenu';
 import { MoneyInput } from '@/components/MoneyInput';
 import { toast, confirmDialog } from '@/components/Toast';
 import { money, dmy, toISODate } from '@/lib/format';
-import { CATEGORY_LABEL } from '@/lib/booking';
+import { CATEGORY_LABEL, METHOD_LABEL } from '@/lib/booking';
 import { addTransaction, updateTransaction, deleteTransaction } from '../actions';
 
 export interface TxnRow {
@@ -22,7 +22,10 @@ export interface TxnRow {
   bookingCustomer: string | null; // tên khách nếu gắn với 1 đơn
 }
 
-const EXPENSE_CATS = ['electricity', 'water', 'cleaning', 'supplies', 'maintenance', 'commission', 'other'];
+const EXPENSE_CATS = [
+  'electricity', 'water', 'internet', 'cleaning', 'maintenance', 'supplies',
+  'commission', 'marketing', 'rent', 'salary', 'other',
+];
 const INCOME_CATS = ['deposit', 'balance', 'other'];
 
 const inputCls =
@@ -194,8 +197,9 @@ function TxnForm({ row, onDone }: { row?: TxnRow; onDone: () => void }) {
         <div>
           <label className={labelCls}>Hình thức</label>
           <select className={inputCls} value={method} onChange={(e) => setMethod(e.target.value)}>
-            <option value="cash">Tiền mặt</option>
-            <option value="transfer">Chuyển khoản</option>
+            {Object.entries(METHOD_LABEL).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
           </select>
         </div>
       </div>

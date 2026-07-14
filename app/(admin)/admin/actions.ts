@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { upsertCustomer } from '@/lib/customers';
 import { toISODate } from '@/lib/format';
+import { queueSheetSync } from '@/lib/syncSheets';
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 type CreateResult =
@@ -39,6 +40,7 @@ export async function approveBooking(id: string): Promise<ActionResult> {
     .eq('status', 'pending');
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -51,6 +53,7 @@ export async function rejectBooking(id: string): Promise<ActionResult> {
     .eq('id', id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -63,6 +66,7 @@ export async function setBookingStatus(
   const { error } = await supabase.from('bookings').update({ status }).eq('id', id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -127,6 +131,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateRe
     .single();
   if (bErr) return { ok: false, error: friendlyError(bErr.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true, id: booking.id as string, code: (code as string) ?? null };
 }
 
@@ -216,6 +221,7 @@ export async function updateBooking(input: UpdateBookingInput): Promise<ActionRe
   const { error } = await supabase.from('bookings').update(patch).eq('id', input.id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -308,6 +314,7 @@ export async function confirmHold(
     .eq('id', holdId);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true, id: holdId, code: (code as string) ?? null };
 }
 
@@ -317,6 +324,7 @@ export async function updateBookingNote(id: string, note: string): Promise<Actio
   const { error } = await supabase.from('bookings').update({ note }).eq('id', id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -326,6 +334,7 @@ export async function deleteBooking(id: string): Promise<ActionResult> {
   const { error } = await supabase.from('bookings').delete().eq('id', id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -359,6 +368,7 @@ export async function addTransaction(input: TxnInput): Promise<ActionResult> {
   });
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -382,6 +392,7 @@ export async function updateTransaction(input: {
   const { error } = await supabase.from('transactions').update(patch).eq('id', input.id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -390,6 +401,7 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
   const { error } = await supabase.from('transactions').delete().eq('id', id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -413,6 +425,7 @@ export async function payCommission(
   });
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -428,6 +441,7 @@ export async function rotateSaleToken(saleId: string): Promise<ActionResult> {
     .eq('role', 'sale');
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -458,6 +472,7 @@ export async function createCustomer(input: {
   });
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -477,6 +492,7 @@ export async function updateCustomer(input: {
   const { error } = await supabase.from('customers').update(patch).eq('id', input.id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -495,6 +511,7 @@ export async function deleteCustomer(id: string): Promise<ActionResult> {
   const { error } = await supabase.from('customers').delete().eq('id', id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -534,6 +551,7 @@ export async function createSale(input: {
   });
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -557,6 +575,7 @@ export async function updateSale(input: {
     .eq('role', 'sale');
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 
@@ -582,6 +601,7 @@ export async function deleteSale(id: string): Promise<ActionResult> {
       .eq('id', id);
     if (error) return { ok: false, error: friendlyError(error.message) };
     revalidatePath('/admin', 'layout');
+    queueSheetSync();
     return { ok: true };
   }
 
@@ -589,6 +609,7 @@ export async function deleteSale(id: string): Promise<ActionResult> {
   const { error } = await supabase.from('profiles').delete().eq('id', id).eq('role', 'sale');
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');
+  queueSheetSync();
   return { ok: true };
 }
 

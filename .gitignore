@@ -35,3 +35,8 @@ supabase/.env
 
 # typescript
 *.tsbuildinfo
+
+# Khóa Service Account Google — TUYỆT ĐỐI không commit
+*service-account*.json
+*-gserviceaccount.json
+longson-homestay-*.json

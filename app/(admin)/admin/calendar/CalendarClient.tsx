@@ -10,7 +10,7 @@ import { Icon } from '@/components/Icon';
 import { BookingForm } from '@/components/BookingForm';
 import { BookingDetail } from '@/components/BookingDetail';
 import { toast } from '@/components/Toast';
-import { deleteBooking, cancelBooking, updateBookingNote, createHold, releaseHold } from '../actions';
+import { deleteBooking, cancelBooking, setBookingStatus, updateBookingNote, createHold, releaseHold } from '../actions';
 
 export function CalendarClient({
   units,
@@ -155,6 +155,12 @@ export function CalendarClient({
               const res = await deleteBooking(detail.id);
               if (!res.ok) return toast.error(res.error);
               toast.success('Đã xóa đơn.');
+              setDetail(null);
+            }}
+            onSetStatus={async (status) => {
+              const res = await setBookingStatus(detail.id, status);
+              if (!res.ok) return toast.error(res.error);
+              toast.success('Đã đổi trạng thái đơn.');
               setDetail(null);
             }}
             onSaveNote={async (note) => {

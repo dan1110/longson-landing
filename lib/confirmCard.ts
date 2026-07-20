@@ -1,6 +1,7 @@
 // Vẽ 1 ẢNH XÁC NHẬN đầy đủ (thông tin đặt phòng + QR cọc) rồi tải về, để sale
 // lưu và gửi khách trong 1 tấm ảnh. Chạy phía trình duyệt (canvas).
 import { money, dmyPad } from './format';
+import { clampDeposit } from './booking';
 import { bankInfo } from './vietqr';
 
 export interface ConfirmCardInput {
@@ -13,7 +14,8 @@ export interface ConfirmCardInput {
   nights: number;
   total: number;
   deposit: number;
-  remaining: number;
+  /** @deprecated Bỏ qua — "còn lại" luôn tự tính = tổng − cọc (đã chặn trần). */
+  remaining?: number;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -27,6 +29,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 export async function downloadConfirmCard(input: ConfirmCardInput): Promise<void> {
+  // Chốt lại cọc & còn lại ngay tại đây: ảnh này gửi thẳng cho khách nên
+  // không được phép in ra số âm hay QR đòi nhiều hơn tổng tiền, dù người
+  // gọi có truyền vào số gì đi nữa.
+  const deposit = clampDeposit(input.deposit, input.total);
+  const owed = Math.max(0, input.total - deposit);
+
   const W = 580;
   const H = 780;
   const s = 2; // nét sắc (retina)
@@ -81,8 +89,8 @@ export async function downloadConfirmCard(input: ConfirmCardInput): Promise<void
   row('Số đêm', `${input.nights} đêm`);
   divider();
   row('Tổng tiền', `${money(input.total)} đ`, true);
-  row('Tiền cọc', `${money(input.deposit)} đ`, true, '#0a6c88');
-  row('Còn lại (trả khi nhận phòng)', `${money(input.remaining)} đ`, true, '#b8402f');
+  row('Tiền cọc', `${money(deposit)} đ`, true, '#0a6c88');
+  row('Còn lại (trả khi nhận phòng)', `${money(owed)} đ`, true, '#b8402f');
   divider();
 
   // Tiêu đề QR
@@ -94,7 +102,7 @@ export async function downloadConfirmCard(input: ConfirmCardInput): Promise<void
 
   // QR (lấy qua proxy cùng origin → không bị chặn)
   try {
-    const qr = await loadImage(`/api/qr?amount=${Math.round(input.deposit)}&code=${encodeURIComponent(input.code)}`);
+    const qr = await loadImage(`/api/qr?amount=${deposit}&code=${encodeURIComponent(input.code)}`);
     const size = 230;
     ctx.drawImage(qr, (W - size) / 2, y, size, size);
     y += size + 18;

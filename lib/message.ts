@@ -1,12 +1,14 @@
 // Sinh tin nhắn xác nhận (mục 11). Thay biến vào template lưu ở DB,
 // GIỮ NGUYÊN emoji, xuống dòng, dấu ⸻.
 import { dmy, dmyPad, money } from './format';
+import { clampDeposit } from './booking';
 import { bankInfo } from './vietqr';
 import type { Booking, Customer, Home, Unit } from './database.types';
 
 export interface MessageVars {
   // Khách & nơi ở (template mặc định mới không dùng, giữ để chủ tự thêm lại)
   ten_khach: string;
+  sdt_khach: string;
   ten_home: string;
   maps_url: string;
   // Ngày & số đêm
@@ -43,6 +45,7 @@ export function buildConfirmMessage(input: {
   home: Pick<Home, 'name' | 'maps_url' | 'owner_name' | 'owner_phone'>;
   unitName: string;
   customerName: string;
+  customerPhone?: string;
   checkin: string;
   checkout: string;
   guests: number;
@@ -59,6 +62,7 @@ export function buildConfirmMessage(input: {
   const total = nights * input.pricePerNight;
   const vars: MessageVars = {
     ten_khach: input.customerName,
+    sdt_khach: input.customerPhone ?? '',
     ten_home: `${home.name} · ${input.unitName}`,
     maps_url: home.maps_url ?? '',
     ngay_checkin: dmyPad(input.checkin),
@@ -68,8 +72,8 @@ export function buildConfirmMessage(input: {
     gia_dem: money(input.pricePerNight),
     tong_tien: money(total),
     ngay_coc: dmyPad(input.checkin),
-    tien_coc: money(input.deposit),
-    con_lai: money(total - input.deposit),
+    tien_coc: money(clampDeposit(input.deposit, total)),
+    con_lai: money(total - clampDeposit(input.deposit, total)),
     ten_chu: home.owner_name ?? 'Ms.Tuyết',
     sdt_chu: home.owner_phone ?? '',
     ten_tk: bankInfo.nameDisplay,
@@ -88,11 +92,13 @@ export function buildMessageVars(input: {
   depositAmount: number; // tiền cọc hiển thị trong tin nhắn
   depositDate?: string;
 }): MessageVars {
-  const { booking, customer, unit, home, depositAmount, depositDate } = input;
+  const { booking, customer, unit, home, depositDate } = input;
+  const depositAmount = clampDeposit(input.depositAmount, Number(booking.total_amount));
   const remaining = Number(booking.total_amount) - depositAmount;
   const guests = booking.guests_adult + booking.guests_child;
   return {
     ten_khach: customer.name,
+    sdt_khach: customer.phone ?? '',
     ten_home: `${home.name} · ${unit.name}`,
     maps_url: home.maps_url ?? '',
     ngay_checkin: dmyPad(booking.checkin_date),

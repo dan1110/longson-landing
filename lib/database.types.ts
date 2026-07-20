@@ -64,6 +64,8 @@ export interface Booking {
   price_per_night: number;
   nights: number; // generated
   total_amount: number; // generated
+  /** Cọc THỎA THUẬN báo khách (QR/tin nhắn). null = suy ra từ transactions. */
+  deposit_amount: number | null;
   status: BookingStatus;
   source: string | null;
   sale_id: string | null;

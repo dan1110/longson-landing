@@ -24,6 +24,25 @@ function friendlyError(message: string): string {
   return message;
 }
 
+/**
+ * Chuẩn hóa tiền cọc trước khi lưu: không âm, không vượt tổng tiền.
+ * Chặn ở server luôn (không chỉ ở form) vì QR/tin nhắn đọc thẳng từ DB —
+ * một số cọc lớn hơn tổng đơn sẽ tạo QR đòi khách nhiều hơn giá phòng.
+ */
+function depositFor(
+  deposit: number | undefined,
+  pricePerNight: number,
+  checkin: string,
+  checkout: string,
+): number | null {
+  if (deposit == null || !Number.isFinite(deposit) || deposit < 0) return null;
+  const nights = Math.round(
+    (new Date(checkout).getTime() - new Date(checkin).getTime()) / 86_400_000,
+  );
+  const total = Math.max(0, nights) * pricePerNight;
+  return total > 0 ? Math.min(Math.round(deposit), total) : Math.round(deposit);
+}
+
 // ── Duyệt booking → confirmed + sinh mã LS… (mục 7) ────────────────
 export async function approveBooking(id: string): Promise<ActionResult> {
   const supabase = await createClient();
@@ -80,6 +99,7 @@ export interface CreateBookingInput {
   guestsAdult: number;
   guestsChild?: number;
   pricePerNight: number;
+  deposit?: number; // cọc thỏa thuận báo khách (cho QR + tin nhắn)
   source?: string;
   saleId?: string;
   note?: string;
@@ -121,6 +141,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateRe
       guests_adult: input.guestsAdult,
       guests_child: input.guestsChild ?? 0,
       price_per_night: input.pricePerNight,
+      deposit_amount: depositFor(input.deposit, input.pricePerNight, input.checkin, input.checkout),
       status: 'confirmed',
       source: input.source ?? null,
       sale_id: input.saleId ?? null,
@@ -187,6 +208,7 @@ export interface UpdateBookingInput {
   guestsAdult?: number;
   guestsChild?: number;
   pricePerNight?: number;
+  deposit?: number;
   source?: string;
   note?: string;
   customerName?: string;
@@ -217,6 +239,22 @@ export async function updateBooking(input: UpdateBookingInput): Promise<ActionRe
   if (input.pricePerNight != null) patch.price_per_night = input.pricePerNight;
   if (input.source !== undefined) patch.source = input.source;
   if (input.note !== undefined) patch.note = input.note;
+
+  // Cọc phải chặn theo tổng tiền SAU khi sửa. Patch có thể chỉ đổi giá hoặc
+  // chỉ đổi ngày, nên lấy giá trị cũ ra trộn rồi mới tính trần.
+  if (input.deposit !== undefined) {
+    const { data: cur } = await supabase
+      .from('bookings')
+      .select('checkin_date, checkout_date, price_per_night')
+      .eq('id', input.id)
+      .single();
+    patch.deposit_amount = depositFor(
+      input.deposit,
+      input.pricePerNight ?? Number(cur?.price_per_night ?? 0),
+      input.checkin ?? (cur?.checkin_date as string),
+      input.checkout ?? (cur?.checkout_date as string),
+    );
+  }
 
   const { error } = await supabase.from('bookings').update(patch).eq('id', input.id);
   if (error) return { ok: false, error: friendlyError(error.message) };
@@ -305,6 +343,7 @@ export async function confirmHold(
       guests_adult: input.guestsAdult,
       guests_child: input.guestsChild ?? 0,
       price_per_night: input.pricePerNight,
+      deposit_amount: depositFor(input.deposit, input.pricePerNight, input.checkin, input.checkout),
       status: 'confirmed',
       source: input.source ?? null,
       sale_id: input.saleId ?? null,
@@ -328,9 +367,58 @@ export async function updateBookingNote(id: string, note: string): Promise<Actio
   return { ok: true };
 }
 
-// ── Xóa đơn (nhả ngày) ─────────────────────────────────────────────
-export async function deleteBooking(id: string): Promise<ActionResult> {
+// ── Hủy đơn (khách hủy) → nhả ngày nhưng GIỮ lịch sử ───────────────
+// Dùng cho trường hợp khách hủy thật: đơn vẫn còn trong sổ để đối soát
+// cọc đã thu, thống kê tỉ lệ hủy… nhưng không còn khóa ngày trên lịch
+// (cancelled không nằm trong ACTIVE_STATUSES).
+export async function cancelBooking(id: string): Promise<ActionResult> {
   const supabase = await createClient();
+  const { error } = await supabase
+    .from('bookings')
+    .update({ status: 'cancelled', hold_expires_at: null })
+    .eq('id', id);
+  if (error) return { ok: false, error: friendlyError(error.message) };
+  revalidatePath('/admin', 'layout');
+  queueSheetSync();
+  return { ok: true };
+}
+
+/** Đếm số khoản thu/chi đang gắn với đơn — để cảnh báo trước khi xóa hẳn. */
+export async function bookingTxnCount(id: string): Promise<number> {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from('transactions')
+    .select('id', { count: 'exact', head: true })
+    .eq('booking_id', id);
+  return count ?? 0;
+}
+
+// ── Xóa hẳn đơn (nhập sai, trùng…) ─────────────────────────────────
+// CHỈ dùng cho đơn nhập nhầm. Khách hủy thật thì dùng cancelBooking.
+//
+// transactions.booking_id là ON DELETE SET NULL → xóa đơn KHÔNG xóa các
+// khoản thu/chi của nó, chúng thành khoản "mồ côi" trôi nổi trong sổ thu
+// chi và vẫn cộng vào doanh thu. Nên mặc định CHẶN nếu đơn đã có giao
+// dịch; muốn xóa thì phải xử lý tiền trước, hoặc gọi lại với force.
+export async function deleteBooking(
+  id: string,
+  opts?: { force?: boolean },
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  if (!opts?.force) {
+    const n = await bookingTxnCount(id);
+    if (n > 0) {
+      return {
+        ok: false,
+        error:
+          `Đơn này đã có ${n} khoản thu/chi trong sổ. Xóa hẳn sẽ để lại số tiền ` +
+          `mồ côi làm sai báo cáo. Hãy dùng "Hủy đơn" (giữ lịch sử), hoặc xóa ` +
+          `các khoản thu/chi trong tab Thu chi trước.`,
+      };
+    }
+  }
+
   const { error } = await supabase.from('bookings').delete().eq('id', id);
   if (error) return { ok: false, error: friendlyError(error.message) };
   revalidatePath('/admin', 'layout');

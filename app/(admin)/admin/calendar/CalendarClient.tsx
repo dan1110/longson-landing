@@ -10,7 +10,7 @@ import { Icon } from '@/components/Icon';
 import { BookingForm } from '@/components/BookingForm';
 import { BookingDetail } from '@/components/BookingDetail';
 import { toast } from '@/components/Toast';
-import { deleteBooking, updateBookingNote, createHold, releaseHold } from '../actions';
+import { deleteBooking, cancelBooking, updateBookingNote, createHold, releaseHold } from '../actions';
 
 export function CalendarClient({
   units,
@@ -144,8 +144,17 @@ export function CalendarClient({
             timesStayed={staysByCustomer.get(detail.customer_id) ?? 1}
             referredByName={detailRefName}
             onEdit={() => openEdit(detail)}
+            onCancel={async () => {
+              const res = await cancelBooking(detail.id);
+              if (!res.ok) return toast.error(res.error);
+              toast.success('Đã hủy đơn — ngày đã được nhả ra.');
+              setDetail(null);
+            }}
             onDelete={async () => {
-              await deleteBooking(detail.id);
+              // Server chặn nếu đơn đã có khoản thu/chi (tránh tiền mồ côi).
+              const res = await deleteBooking(detail.id);
+              if (!res.ok) return toast.error(res.error);
+              toast.success('Đã xóa đơn.');
               setDetail(null);
             }}
             onSaveNote={async (note) => {

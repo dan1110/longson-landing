@@ -7,7 +7,7 @@ import type { BookingFull, Home, MessageTemplate } from '@/lib/database.types';
 import { buildMessageVars, renderTemplate } from '@/lib/message';
 import { bankConfigured } from '@/lib/vietqr';
 import { downloadConfirmCard } from '@/lib/confirmCard';
-import { paid, remaining, STATUS_LABEL, CATEGORY_LABEL } from '@/lib/booking';
+import { paid, remaining, depositOf, STATUS_LABEL, CATEGORY_LABEL } from '@/lib/booking';
 import { money, dmy, dm } from '@/lib/format';
 import { Pill } from './ui';
 import { Icon } from './Icon';
@@ -22,6 +22,7 @@ export function BookingDetail({
   referredByName,
   admin = false,
   onEdit,
+  onCancel,
   onDelete,
   onSaveNote,
 }: {
@@ -32,6 +33,7 @@ export function BookingDetail({
   referredByName?: string | null;
   admin?: boolean;
   onEdit?: () => void;
+  onCancel?: () => void;
   onDelete?: () => void;
   onSaveNote?: (note: string) => Promise<void>;
 }) {
@@ -45,9 +47,10 @@ export function BookingDetail({
   const code = booking.code ?? 'CHUA-DUYET';
   const guests = booking.guests_adult + booking.guests_child;
 
-  // Số tiền QR/tin nhắn CỐ ĐỊNH theo dữ liệu (không cho sửa tay).
-  // Cọc = đã thu; nếu chưa thu thì gợi ý = giá 1 đêm.
-  const deposit = paidAmount > 0 ? paidAmount : booking.price_per_night;
+  // Cọc lấy từ số sale đã chốt với khách (lưu ở đơn). Đơn cũ chưa có thì
+  // suy ra từ tiền đã thu — nhưng luôn chặn trần ở tổng tiền, nếu không
+  // QR sẽ đòi khách chuyển nhiều hơn giá phòng.
+  const deposit = depositOf(booking, booking.transactions);
 
   const message = renderTemplate(
     template.body,
@@ -95,7 +98,6 @@ export function BookingDetail({
         nights: booking.nights,
         total: Number(booking.total_amount),
         deposit,
-        remaining: Number(booking.total_amount) - deposit,
       });
     } finally {
       setDling(false);
@@ -285,25 +287,60 @@ export function BookingDetail({
         </div>
       )}
 
-      {/* CRUD: Sửa / Xóa (admin) */}
-      {admin && (onEdit || onDelete) && (
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          {onEdit && (
-            <button
-              onClick={onEdit}
-              className="rounded-xl py-3 text-sm font-semibold bg-white border-[1.5px] border-[var(--line)] hover:bg-[var(--paper)] transition-colors flex items-center justify-center gap-2"
-            >
-              <Icon name="settings" className="w-4 h-4" /> Sửa đơn
-            </button>
-          )}
+      {/* CRUD: Sửa / Hủy / Xóa (admin) */}
+      {admin && (onEdit || onCancel || onDelete) && (
+        <div className="space-y-2 pt-1">
+          <div className="grid grid-cols-2 gap-2">
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                className="rounded-xl py-3 text-sm font-semibold bg-white border-[1.5px] border-[var(--line)] hover:bg-[var(--paper)] transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon name="settings" className="w-4 h-4" /> Sửa đơn
+              </button>
+            )}
+            {/* Khách hủy → giữ lịch sử, chỉ nhả ngày. Đây là nút nên dùng. */}
+            {onCancel && booking.status !== 'cancelled' && (
+              <button
+                onClick={async () => {
+                  if (
+                    await confirmDialog({
+                      title: 'Hủy đơn này?',
+                      message:
+                        'Ngày sẽ được nhả ra cho khách khác đặt. Đơn vẫn được lưu lại trong sổ để đối soát tiền cọc đã thu.',
+                      confirmText: 'Hủy đơn',
+                      danger: true,
+                    })
+                  )
+                    onCancel();
+                }}
+                className="rounded-xl py-3 text-sm font-semibold bg-white border-[1.5px] border-[var(--pend-line)] text-[var(--pend-ink)] hover:bg-[#fdf8ef] transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon name="x" className="w-4 h-4" /> Hủy đơn
+              </button>
+            )}
+          </div>
+
+          {/* Xóa hẳn: chỉ cho đơn nhập nhầm. Để riêng, chữ nhỏ, tránh bấm nhầm. */}
           {onDelete && (
             <button
               onClick={async () => {
-                if (await confirmDialog({ title: 'Xóa đơn này?', message: 'Ngày sẽ được nhả ra.', confirmText: 'Xóa', danger: true })) onDelete();
+                if (
+                  await confirmDialog({
+                    title: 'Xóa hẳn đơn này?',
+                    message:
+                      paidAmount > 0
+                        ? `Đơn này đã ghi nhận ${money(paidAmount)} đ tiền thu. Xóa hẳn sẽ làm sai sổ thu chi — hãy dùng "Hủy đơn" nếu khách hủy thật.`
+                        : 'Chỉ dùng khi nhập nhầm. Đơn sẽ biến mất vĩnh viễn, không khôi phục được.',
+                    confirmText: 'Xóa vĩnh viễn',
+                    danger: true,
+                  })
+                )
+                  onDelete();
               }}
-              className="rounded-xl py-3 text-sm font-semibold bg-white border-[1.5px] border-[var(--tape-line)] text-[var(--tape-ink)] hover:bg-[#fdf3f1] transition-colors flex items-center justify-center gap-2"
+              className="w-full rounded-xl py-2.5 text-[12.5px] font-semibold bg-transparent text-[var(--tape-ink)] hover:bg-[#fdf3f1] transition-colors flex items-center justify-center gap-1.5"
             >
-              <Icon name="x" className="w-4 h-4" /> Xóa đơn
+              <Icon name="trash" className="w-3.5 h-3.5" /> Xóa hẳn (nhập nhầm)
             </button>
           )}
         </div>

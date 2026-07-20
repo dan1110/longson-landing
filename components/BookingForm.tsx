@@ -74,7 +74,10 @@ export function BookingForm({
   const [note, setNote] = useState(booking?.note ?? '');
   const [referrerPhone, setReferrerPhone] = useState('');
   const [price, setPrice] = useState(booking?.price_per_night ?? firstUnit?.base_price ?? 0);
-  const [deposit, setDeposit] = useState(booking?.price_per_night ?? firstUnit?.base_price ?? 0);
+  // Cọc đã lưu ở đơn thì dùng lại; đơn cũ chưa có thì gợi ý = giá 1 đêm.
+  const [deposit, setDeposit] = useState(
+    booking?.deposit_amount ?? booking?.price_per_night ?? firstUnit?.base_price ?? 0,
+  );
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const [createdMsg, setCreatedMsg] = useState<string | null>(null);
@@ -146,6 +149,7 @@ export function BookingForm({
         guestsAdult: adult,
         guestsChild: child,
         pricePerNight: price,
+        deposit,
         source,
         note,
         customerId: booking!.customer_id,
@@ -167,6 +171,7 @@ export function BookingForm({
       guestsAdult: adult,
       guestsChild: child,
       pricePerNight: price,
+      deposit,
       source,
       saleId: saleId || undefined,
       note: note || undefined,
@@ -185,6 +190,7 @@ export function BookingForm({
       home,
       unitName: unit?.name ?? '',
       customerName: name,
+      customerPhone: phone,
       checkin,
       checkout,
       guests: adult + child,
@@ -366,12 +372,23 @@ export function BookingForm({
         </div>
       )}
 
-      {!editing && (
-        <div>
-          <label className={labelCls}>Tiền cọc (cho tin nhắn)</label>
-          <MoneyInput value={deposit} onChange={setDeposit} className={inputCls} />
-        </div>
-      )}
+      {/* Hiện cả khi SỬA: số này in lên QR + tin nhắn + ảnh xác nhận nên
+          admin phải sửa lại được khi khách đổi mức cọc. */}
+      <div>
+        <label className={labelCls}>Tiền cọc (in lên QR & tin nhắn)</label>
+        <MoneyInput value={deposit} onChange={setDeposit} className={inputCls} />
+        {total > 0 && deposit > total && (
+          <p className="text-[12px] text-[var(--tape-ink)] bg-[var(--tape)] rounded-lg px-3 py-2 mt-1.5">
+            Cọc đang lớn hơn tổng tiền ({money(total)} đ). Khi lưu sẽ tự hạ về đúng tổng tiền
+            để QR không đòi khách chuyển thừa.
+          </p>
+        )}
+        {total > 0 && deposit > 0 && deposit <= total && (
+          <p className="text-[12px] text-[var(--ink-3)] mt-1.5">
+            Còn lại khi nhận phòng: <b className="mono">{money(total - deposit)} đ</b>
+          </p>
+        )}
+      </div>
 
       <div>
         <label className={labelCls}>Ghi chú</label>

@@ -33,6 +33,34 @@ export function remaining(booking: Booking, txns: Transaction[] | undefined): nu
   return Number(booking.total_amount) - paid(txns);
 }
 
+/**
+ * Tiền cọc dùng cho QR / tin nhắn / ảnh xác nhận.
+ *
+ * Ưu tiên số cọc THỎA THUẬN mà sale đã nhập & lưu (deposit_amount).
+ * Đơn cũ chưa có số này → suy ra như trước (đã thu, không thì 1 đêm).
+ * LUÔN chặn trần ở tổng tiền: cọc không thể lớn hơn tổng đơn, nếu không
+ * "còn lại" sẽ ra số âm (VD tổng 2.000.000, cọc 5.000.000 → còn −3.000.000)
+ * và QR sẽ yêu cầu khách chuyển nhiều hơn giá phòng.
+ */
+export function depositOf(booking: Booking, txns: Transaction[] | undefined): number {
+  const total = Number(booking.total_amount);
+  const explicit = booking.deposit_amount;
+  const raw =
+    explicit != null && explicit >= 0
+      ? Number(explicit)
+      : paid(txns) > 0
+        ? paid(txns)
+        : Number(booking.price_per_night);
+  return clampDeposit(raw, total);
+}
+
+/** Cọc nằm trong [0, tổng tiền]. Dùng chung cho form lẫn màn chi tiết. */
+export function clampDeposit(deposit: number, total: number): number {
+  if (!Number.isFinite(deposit) || deposit <= 0) return 0;
+  if (total > 0 && deposit > total) return total;
+  return Math.round(deposit);
+}
+
 /** Nhãn tiếng Việt cho trạng thái. */
 export const STATUS_LABEL: Record<BookingStatus, string> = {
   pending: 'Chờ duyệt',

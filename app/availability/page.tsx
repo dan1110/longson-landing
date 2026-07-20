@@ -16,7 +16,7 @@ import { downloadConfirmCard } from '@/lib/confirmCard';
 import { money, toISODate, nightsBetween, dm } from '@/lib/format';
 import type { BookingFull, Unit } from '@/lib/database.types';
 
-interface PubUnit { id: string; home_name: string; name: string; base_price: number; sort_order: number }
+interface PubUnit { id: string; home_name: string; name: string; base_price: number; maps_url: string | null; sort_order: number }
 interface PubBusy { unit_id: string; checkin_date: string; checkout_date: string; status: string }
 interface PubSale { id: string; name: string }
 
@@ -241,7 +241,6 @@ function BookingForm({
         nights,
         total: nights * price,
         deposit,
-        remaining: nights * price - deposit,
       });
     } finally {
       setDling(false);
@@ -250,9 +249,10 @@ function BookingForm({
 
   const message = buildConfirmMessage({
     template,
-    home: { name: unit.home_name, maps_url: '', owner_name: '', owner_phone: '' },
+    home: { name: unit.home_name, maps_url: unit.maps_url ?? '', owner_name: '', owner_phone: '' },
     unitName: unit.name,
     customerName: name,
+    customerPhone: phone,
     checkin,
     checkout,
     guests,
@@ -275,6 +275,7 @@ function BookingForm({
       p_price: price,
       p_sale_name: saleName.trim(),
       p_source: source,
+      p_deposit: deposit, // lưu cọc để admin mở lại thấy đúng số đã báo khách
     });
     setSaving(false);
     if (error) return setErr('Có lỗi khi đặt, thử lại.');

@@ -75,6 +75,8 @@ create table bookings (
   nights          int    generated always as (checkout_date - checkin_date) stored,
   total_amount    bigint generated always as
                     (price_per_night * (checkout_date - checkin_date)) stored,
+  -- Cọc THỎA THUẬN báo khách (QR/tin nhắn). Tiền THỰC THU vẫn ở transactions.
+  deposit_amount  bigint check (deposit_amount is null or deposit_amount >= 0),
   status          booking_status not null default 'pending',
   source          text,                            -- 'zalo','facebook','ota','referral','walk_in'
   sale_id         uuid references profiles(id),

@@ -40,7 +40,7 @@ export function BookingDetail({
   onSaveNote,
 }: {
   booking: BookingFull;
-  home: Home;
+  home?: Home | null;
   template: MessageTemplate;
   timesStayed?: number;
   referredByName?: string | null;
@@ -68,10 +68,13 @@ export function BookingDetail({
 
   const message = renderTemplate(
     template.body,
+    // KHÔNG dùng `!`: nhiều đơn import cũ có customer_id trỏ tới khách đã
+    // không còn → booking.customer là null. Ép kiểu ở đây từng làm crash
+    // trắng trang khi admin mở chi tiết những đơn đó.
     buildMessageVars({
       booking,
-      customer: booking.customer!,
-      unit: booking.unit!,
+      customer: booking.customer,
+      unit: booking.unit,
       home,
       depositAmount: deposit,
     }),
@@ -105,7 +108,7 @@ export function BookingDetail({
       await downloadConfirmCard({
         code,
         customerName: booking.customer?.name ?? '',
-        homeName: home.name,
+        homeName: home?.name ?? '',
         unitName: booking.unit?.name ?? '',
         checkin: booking.checkin_date,
         checkout: booking.checkout_date,
@@ -122,7 +125,11 @@ export function BookingDetail({
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <b className="text-[15px]">{booking.customer?.name}</b>
+          <b className="text-[15px]">
+            {booking.customer?.name ?? (
+              <span className="text-[var(--ink-3)] font-semibold">Khách chưa có tên</span>
+            )}
+          </b>
           <div className="text-[11.5px] text-[var(--ink-3)] mt-0.5 space-y-0.5">
             <div className="flex items-center gap-1.5">
               <Icon name="users" className="w-3.5 h-3.5" /> {guests} khách

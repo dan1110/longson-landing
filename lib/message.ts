@@ -84,11 +84,19 @@ export function buildConfirmMessage(input: {
 }
 
 /** Gom biến từ dữ liệu booking để đổ vào template. */
+/**
+ * Gom biến từ dữ liệu booking để đổ vào template.
+ *
+ * customer/unit/home CÓ THỂ NULL: nhiều đơn import từ Excel có customer_id
+ * trỏ tới khách không còn tồn tại. Trước đây chỗ gọi dùng `booking.customer!`
+ * nên khi mở chi tiết những đơn đó là crash trắng trang. Thiếu dữ liệu thì
+ * để trống chứ không được ném lỗi.
+ */
 export function buildMessageVars(input: {
   booking: Booking;
-  customer: Customer;
-  unit: Unit;
-  home: Home;
+  customer?: Customer | null;
+  unit?: Unit | null;
+  home?: Home | null;
   depositAmount: number; // tiền cọc hiển thị trong tin nhắn
   depositDate?: string;
 }): MessageVars {
@@ -97,21 +105,25 @@ export function buildMessageVars(input: {
   const remaining = Number(booking.total_amount) - depositAmount;
   const guests = booking.guests_adult + booking.guests_child;
   return {
-    ten_khach: customer.name,
-    sdt_khach: customer.phone ?? '',
-    ten_home: `${home.name} · ${unit.name}`,
-    maps_url: home.maps_url ?? '',
+    ten_khach: customer?.name ?? '',
+    sdt_khach: customer?.phone ?? '',
+    ten_home: [home?.name, unit?.name].filter(Boolean).join(' · '),
+    maps_url: home?.maps_url ?? '',
     ngay_checkin: dmyPad(booking.checkin_date),
     ngay_checkout: dmyPad(booking.checkout_date),
     so_khach: String(guests),
     so_dem: String(booking.nights),
     gia_dem: money(booking.price_per_night),
     tong_tien: money(booking.total_amount),
-    ngay_coc: depositDate ? dmy(depositDate) : dmy(booking.created_at.slice(0, 10)),
+    ngay_coc: depositDate
+      ? dmy(depositDate)
+      : booking.created_at
+        ? dmy(booking.created_at.slice(0, 10))
+        : '',
     tien_coc: money(depositAmount),
     con_lai: money(remaining),
-    ten_chu: home.owner_name ?? 'Ms.Tuyết',
-    sdt_chu: home.owner_phone ?? '',
+    ten_chu: home?.owner_name ?? 'Ms.Tuyết',
+    sdt_chu: home?.owner_phone ?? '',
     ten_tk: bankInfo.nameDisplay,
     so_tk: bankInfo.account,
     ngan_hang: bankInfo.bankName,

@@ -87,6 +87,21 @@ export function CalendarClient({
     setFormOpen(true);
   }
 
+  // Dùng chung cho cả màn chi tiết lẫn form sửa, để hai chỗ hành xử giống nhau.
+  async function doCancel(id: string) {
+    const res = await cancelBooking(id);
+    if (!res.ok) return toast.error(res.error);
+    toast.success('Đã hủy đơn — ngày đã được nhả ra.');
+    setDetail(null);
+  }
+  async function doDelete(id: string) {
+    // Server chặn nếu đơn đã có khoản thu/chi (tránh tiền mồ côi trong sổ).
+    const res = await deleteBooking(id);
+    if (!res.ok) return toast.error(res.error);
+    toast.success('Đã xóa đơn.');
+    setDetail(null);
+  }
+
   const detailHome = detail
     ? homes.find((h) => h.id === detail.unit?.home_id) ?? homes[0]
     : homes[0];
@@ -131,6 +146,8 @@ export function CalendarClient({
           holdId={holdId}
           onSaved={() => { savedRef.current = true; }}
           onDone={closeForm}
+          onCancel={editBooking ? () => doCancel(editBooking.id) : undefined}
+          onDelete={editBooking ? () => doDelete(editBooking.id) : undefined}
         />
       </Sheet>
 
@@ -144,19 +161,8 @@ export function CalendarClient({
             timesStayed={staysByCustomer.get(detail.customer_id) ?? 1}
             referredByName={detailRefName}
             onEdit={() => openEdit(detail)}
-            onCancel={async () => {
-              const res = await cancelBooking(detail.id);
-              if (!res.ok) return toast.error(res.error);
-              toast.success('Đã hủy đơn — ngày đã được nhả ra.');
-              setDetail(null);
-            }}
-            onDelete={async () => {
-              // Server chặn nếu đơn đã có khoản thu/chi (tránh tiền mồ côi).
-              const res = await deleteBooking(detail.id);
-              if (!res.ok) return toast.error(res.error);
-              toast.success('Đã xóa đơn.');
-              setDetail(null);
-            }}
+            onCancel={() => doCancel(detail.id)}
+            onDelete={() => doDelete(detail.id)}
             onSetStatus={async (status) => {
               const res = await setBookingStatus(detail.id, status);
               if (!res.ok) return toast.error(res.error);

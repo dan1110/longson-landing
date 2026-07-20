@@ -18,6 +18,7 @@ import { downloadConfirmCard } from '@/lib/confirmCard';
 import { nightsBetween, money } from '@/lib/format';
 import { Icon } from './Icon';
 import { MoneyInput } from './MoneyInput';
+import { confirmDialog } from './Toast';
 
 const SOURCES = [
   { v: 'zalo', l: 'Zalo' },
@@ -45,6 +46,8 @@ export function BookingForm({
   holdId,
   onSaved,
   onDone,
+  onCancel,
+  onDelete,
 }: {
   units: (Unit & { home?: { name: string } })[];
   sales: Profile[];
@@ -57,6 +60,8 @@ export function BookingForm({
   holdId?: string; // có = đang chốt một "giữ chỗ" đã đặt trước
   onSaved?: () => void; // gọi khi lưu thành công (để đừng nhả giữ chỗ)
   onDone: () => void;
+  onCancel?: () => Promise<void> | void; // hủy đơn (chỉ khi sửa)
+  onDelete?: () => Promise<void> | void; // xóa hẳn (chỉ khi sửa)
 }) {
   const editing = !!booking;
   const firstUnit =
@@ -411,6 +416,56 @@ export function BookingForm({
       >
         {loading ? 'Đang lưu…' : editing ? 'Lưu thay đổi' : 'Tạo đơn & soạn tin nhắn'}
       </button>
+
+      {/* Hủy / Xóa ngay trong form sửa (khỏi phải quay lại màn chi tiết) */}
+      {editing && (onCancel || onDelete) && (
+        <div className="pt-1 border-t border-[var(--line)] space-y-2">
+          {onCancel && booking?.status !== 'cancelled' && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (
+                  await confirmDialog({
+                    title: 'Hủy đơn này?',
+                    message:
+                      'Ngày sẽ được nhả ra cho khách khác đặt. Đơn vẫn được lưu lại trong sổ để đối soát tiền cọc đã thu.',
+                    confirmText: 'Hủy đơn',
+                    danger: true,
+                  })
+                ) {
+                  await onCancel();
+                  onDone();
+                }
+              }}
+              className="w-full rounded-xl py-3 text-sm font-semibold bg-white border-[1.5px] border-[var(--pend-line)] text-[var(--pend-ink)] hover:bg-[#fdf8ef] transition-colors flex items-center justify-center gap-2"
+            >
+              <Icon name="x" className="w-4 h-4" /> Hủy đơn (khách hủy)
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (
+                  await confirmDialog({
+                    title: 'Xóa hẳn đơn này?',
+                    message:
+                      'Chỉ dùng khi nhập nhầm. Đơn sẽ biến mất vĩnh viễn. Khách hủy thật thì dùng "Hủy đơn" để còn giữ lịch sử.',
+                    confirmText: 'Xóa vĩnh viễn',
+                    danger: true,
+                  })
+                ) {
+                  await onDelete();
+                  onDone();
+                }
+              }}
+              className="w-full rounded-xl py-2.5 text-[12.5px] font-semibold bg-transparent text-[var(--tape-ink)] hover:bg-[#fdf3f1] transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Icon name="trash" className="w-3.5 h-3.5" /> Xóa hẳn (nhập nhầm)
+            </button>
+          )}
+        </div>
+      )}
     </form>
   );
 }

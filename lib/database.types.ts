@@ -75,6 +75,19 @@ export interface Booking {
   hold_expires_at: string | null;
 }
 
+/** 1 dòng lịch sử sửa đơn (bảng booking_audit, ghi bằng trigger). */
+export interface BookingAudit {
+  id: number;
+  booking_id: string | null;
+  booking_code: string | null;
+  action: 'created' | 'updated' | 'deleted';
+  /** {cột: [giá trị cũ, giá trị mới]}; riêng 'deleted' có {snapshot: {...}} */
+  changes: Record<string, unknown>;
+  actor_id: string | null;
+  actor_name: string | null;
+  created_at: string;
+}
+
 export interface Transaction {
   id: string;
   booking_id: string | null;

@@ -13,6 +13,7 @@ import { Pill } from './ui';
 import { Icon } from './Icon';
 import { confirmDialog } from './Toast';
 import { QrBox } from './QrBox';
+import { BookingHistory } from './BookingHistory';
 /**
  * Trạng thái admin đổi tay được từ màn chi tiết.
  * Cố ý KHÔNG có 'cancelled' (đã có nút "Hủy đơn" riêng, kèm cảnh báo)
@@ -333,6 +334,9 @@ export function BookingDetail({
           )}
         </div>
       )}
+
+      {/* Lịch sử sửa đơn (admin) */}
+      {admin && <BookingHistory bookingId={booking.id} />}
 
       {/* CRUD: Sửa / Hủy / Xóa (admin) */}
       {admin && (onEdit || onCancel || onDelete) && (

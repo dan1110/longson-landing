@@ -13,6 +13,18 @@ import { Pill } from './ui';
 import { Icon } from './Icon';
 import { confirmDialog } from './Toast';
 import { QrBox } from './QrBox';
+/**
+ * Trạng thái admin đổi tay được từ màn chi tiết.
+ * Cố ý KHÔNG có 'cancelled' (đã có nút "Hủy đơn" riêng, kèm cảnh báo)
+ * và không có 'pending'/'rejected' (thuộc luồng duyệt đơn).
+ */
+export type EditableStatus = 'confirmed' | 'staying' | 'completed';
+
+const STATUS_CHOICES: { v: EditableStatus; l: string }[] = [
+  { v: 'confirmed', l: 'Đã duyệt' },
+  { v: 'staying', l: 'Đang ở' },
+  { v: 'completed', l: 'Đã trả phòng' },
+];
 
 export function BookingDetail({
   booking,
@@ -24,6 +36,7 @@ export function BookingDetail({
   onEdit,
   onCancel,
   onDelete,
+  onSetStatus,
   onSaveNote,
 }: {
   booking: BookingFull;
@@ -35,6 +48,7 @@ export function BookingDetail({
   onEdit?: () => void;
   onCancel?: () => void;
   onDelete?: () => void;
+  onSetStatus?: (status: EditableStatus) => void;
   onSaveNote?: (note: string) => Promise<void>;
 }) {
   const [copied, setCopied] = useState(false);
@@ -254,6 +268,32 @@ export function BookingDetail({
           <p className="text-[12px] text-[var(--ink-3)]">Chưa có khoản thu nào.</p>
         )}
       </div>
+
+      {/* Đổi trạng thái nhanh (admin) */}
+      {admin && onSetStatus && (
+        <div className="bg-white border border-[var(--line)] rounded-[12px] p-3">
+          <div className="text-[10px] font-bold uppercase tracking-wide text-[var(--ink-3)] mb-2">
+            Trạng thái · hiện tại: {STATUS_LABEL[booking.status]}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {STATUS_CHOICES.filter((s) => s.v !== booking.status).map((s) => (
+              <button
+                key={s.v}
+                onClick={() => onSetStatus(s.v)}
+                className="rounded-lg px-2.5 py-1.5 text-[12px] font-semibold bg-[var(--paper)] border border-[var(--line)] hover:bg-white transition-colors"
+              >
+                {s.l}
+              </button>
+            ))}
+          </div>
+          {booking.status === 'cancelled' && (
+            <p className="text-[11.5px] text-[var(--ink-3)] mt-2">
+              Đơn đã hủy không khóa ngày. Khôi phục lại sẽ báo lỗi nếu trong lúc đó
+              đã có đơn khác đặt trùng ngày.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Ghi chú (admin sửa được) */}
       {admin && (

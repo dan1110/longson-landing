@@ -79,9 +79,7 @@ export async function rejectBooking(id: string): Promise<ActionResult> {
 // ── Đổi trạng thái (nhận phòng / trả phòng / hủy) ──────────────────
 export async function setBookingStatus(
   id: string,
-  // 'confirmed' để KHÔI PHỤC đơn đã hủy — lúc đó trigger chống trùng lịch
-  // mới chạy lại, nên có thể báo TRUNG_LICH nếu ngày đã có đơn khác.
-  status: 'confirmed' | 'staying' | 'completed' | 'cancelled',
+  status: 'staying' | 'completed' | 'cancelled',
 ): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.from('bookings').update({ status }).eq('id', id);

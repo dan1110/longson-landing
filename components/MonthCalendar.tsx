@@ -43,7 +43,6 @@ export function MonthCalendar({
   const [unitId, setUnitId] = useState<string>(units[0]?.id ?? 'all');
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
-  const [showDead, setShowDead] = useState(false);
 
   const todayIso = useMemo(() => toISODate(new Date()), []);
 
@@ -74,24 +73,8 @@ export function MonthCalendar({
     [bookings, unitId],
   );
 
-  // Đơn đã hủy/từ chối: KHÔNG khóa ngày, nhưng vẫn cho xem lại để biết
-  // khách nào đã hủy (bật/tắt bằng nút "Hiện đơn đã hủy").
-  const deadBookings = useMemo(
-    () =>
-      bookings.filter(
-        (b) =>
-          (b.status === 'rejected' || b.status === 'cancelled') &&
-          (unitId === 'all' || b.unit_id === unitId),
-      ),
-    [bookings, unitId],
-  );
-
   function bookingsOn(iso: string): BookingFull[] {
     return activeBookings.filter((b) => b.checkin_date <= iso && b.checkout_date > iso);
-  }
-  function deadOn(iso: string): BookingFull[] {
-    if (!showDead) return [];
-    return deadBookings.filter((b) => b.checkin_date <= iso && b.checkout_date > iso);
   }
 
   function prevMonth() {
@@ -175,21 +158,6 @@ export function MonthCalendar({
         <div className="text-[16px] font-extrabold tracking-tight flex-1">
           {MONTHS[month0]} <span className="text-[var(--ink-3)] font-bold">{year}</span>
         </div>
-        {/* Đơn đã hủy vẫn nằm trong DB — bật lên để xem khách nào đã hủy. */}
-        {deadBookings.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowDead((v) => !v)}
-            className={`h-9 px-2.5 rounded-lg text-[12px] font-semibold border transition-colors ${
-              showDead
-                ? 'bg-[var(--paper)] border-[var(--ink-3)] text-[var(--ink-2)]'
-                : 'bg-white border-[var(--line)] text-[var(--ink-3)] hover:bg-[var(--paper)]'
-            }`}
-            title="Đơn đã hủy không khóa ngày, chỉ hiện để tra cứu"
-          >
-            {showDead ? '✓ ' : ''}Đơn đã hủy ({deadBookings.length})
-          </button>
-        )}
         <select
           value={unitId}
           onChange={(e) => setUnitId(e.target.value)}
@@ -226,15 +194,11 @@ export function MonthCalendar({
           const selecting = inSelRange(c.iso);
           const blocked = !!onCreateRange && dayBusy(c.iso);
           return (
-            // KHÔNG dùng <button disabled> cho ô ngày: trình duyệt chặn mọi
-            // click bên trong button bị disabled, nên chip tên khách nằm bên
-            // trong sẽ không bấm được → admin không mở được đơn để sửa/xóa.
-            // Dùng div + tự chặn onDayClick khi ngày đã bận.
-            <div
+            <button
               key={c.iso}
-              onClick={() => !blocked && onDayClick(c.iso)}
+              onClick={() => onDayClick(c.iso)}
               onMouseEnter={() => rangeStart && setHover(c.iso)}
-              aria-disabled={blocked}
+              disabled={blocked}
               className={`text-left min-h-[76px] lg:min-h-[92px] p-1.5 border-b border-r border-[var(--line)] align-top transition-colors ${
                 i % 7 === 6 ? 'border-r-0' : ''
               } ${
@@ -271,14 +235,14 @@ export function MonthCalendar({
                       : b.customer?.name ?? b.code ?? 'Đơn';
                   const label = unitId === 'all' ? `${who} · ${u?.name ?? ''}` : who;
                   return (
-                    <button
+                    <span
                       key={b.id}
-                      type="button"
+                      role="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         onPickBooking?.(b);
                       }}
-                      className={`block w-full text-left text-[10px] leading-tight font-medium px-1.5 py-0.5 rounded-md truncate cursor-pointer ${
+                      className={`block text-[10px] leading-tight font-medium px-1.5 py-0.5 rounded-md truncate cursor-pointer ${
                         pend
                           ? 'bg-[var(--pend)] text-[var(--pend-ink)] border border-[var(--pend-line)]'
                           : 'bg-[var(--tape)] text-[var(--tape-ink)]'
@@ -286,30 +250,14 @@ export function MonthCalendar({
                       title={label}
                     >
                       {pend ? '⏳ ' : ''}{label}
-                    </button>
+                    </span>
                   );
                 })}
                 {dayBookings.length > 3 && (
                   <span className="block text-[9.5px] text-[var(--ink-3)] pl-1">+{dayBookings.length - 3} nữa</span>
                 )}
-
-                {/* Đơn đã hủy — mờ, gạch ngang, vẫn bấm xem được */}
-                {deadOn(c.iso).map((b) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onPickBooking?.(b);
-                    }}
-                    className="block w-full text-left text-[10px] leading-tight font-medium px-1.5 py-0.5 rounded-md truncate cursor-pointer bg-[#f1f3f5] text-[var(--ink-3)] border border-dashed border-[var(--line)] line-through"
-                    title={`${b.customer?.name ?? b.code ?? 'Đơn'} · ${b.status === 'cancelled' ? 'đã hủy' : 'từ chối'}`}
-                  >
-                    {b.customer?.name ?? b.code ?? 'Đơn'}
-                  </button>
-                ))}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

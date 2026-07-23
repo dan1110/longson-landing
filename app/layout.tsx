@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
 import { Toaster } from '@/components/Toast';
+import { ClarityAnalytics } from '@/components/clarity-analytics';
 import './globals.css';
 
 const beVietnam = Be_Vietnam_Pro({
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body className="font-sans">
         {children}
         <Toaster />
+        <ClarityAnalytics />
       </body>
     </html>
   );
